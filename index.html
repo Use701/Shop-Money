@@ -1,5 +1,6 @@
 <script>
-let money = Number(localStorage.getItem("money")) || 0;
+let money = parseInt(localStorage.getItem("money")) || 0;
+document.getElementById("money").textContent = money;
 
 let unlocked = false;
 let unlockTimer = null;
@@ -32,12 +33,12 @@ const X = "🪐";
 const Y = "🎯";
 const Z = "👁️";
 
-// 🔐 ONLY REAL PASSWORD
+// 🔐 SECRET CODE (always Q → 🌈)
 const secretCode = Q;
 
 // lock system
-let wrongAttempts = Number(localStorage.getItem("wrongAttempts")) || 0;
-let lockUntil = Number(localStorage.getItem("lockUntil")) || 0;
+let wrongAttempts = parseInt(localStorage.getItem("wrongAttempts")) || 0;
+let lockUntil = parseInt(localStorage.getItem("lockUntil")) || 0;
 
 function isLocked() {
     return Date.now() < lockUntil;
@@ -63,11 +64,6 @@ function showRedScreen(msg) {
         </div>
     `;
 }
-
-// wait until page loads (IMPORTANT FIX)
-window.onload = function () {
-    document.getElementById("money").textContent = money;
-};
 
 function unlock() {
     if (isLocked()) {
