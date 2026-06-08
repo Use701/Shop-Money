@@ -4,7 +4,6 @@ let money = Number(localStorage.getItem("money")) || 0;
 let unlocked = false;
 let unlockTimer = null;
 
-// 26 constants
 const A = "😡";
 const B = "😈";
 const C = "😂";
@@ -32,10 +31,8 @@ const X = "🪐";
 const Y = "🎯";
 const Z = "👁️";
 
-// 🔐 ONLY REAL PASSWORD
 const secretCode = Q;
 
-// lock system
 let wrongAttempts = Number(localStorage.getItem("wrongAttempts")) || 0;
 let lockUntil = Number(localStorage.getItem("lockUntil")) || 0;
 
@@ -64,7 +61,6 @@ function showRedScreen(msg) {
     `;
 }
 
-// wait until page loads (IMPORTANT FIX)
 window.onload = function () {
     document.getElementById("money").textContent = money;
 };
