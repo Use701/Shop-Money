@@ -83,7 +83,7 @@ function unlock() {
         wrongAttempts++;
         localStorage.setItem("wrongAttempts", wrongAttempts);
 
-        if (wrongAttempts >= 2) {
+        if (wrongAttempts >= 1) {
             lockUntil = Date.now() + 30 * 60 * 1000;
             localStorage.setItem("lockUntil", lockUntil);
 
