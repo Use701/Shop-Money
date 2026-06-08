@@ -9,14 +9,14 @@
 <button onclick="decrease()">Decrease</button>
 
 <script>
-// ================= MONEY =================
+
 let money = parseInt(localStorage.getItem("money")) || 0;
 document.getElementById("money").textContent = money;
 
 let unlocked = false;
 let unlockTimer = null;
 
-// ================= 26 CONSTANTS =================
+
 const A = "😡";
 const B = "😈";
 const C = "😂";
@@ -44,14 +44,14 @@ const X = "🪐";
 const Y = "🎯";
 const Z = "👁️";
 
-// ================= SECRET CODE =================
+
 const letters = [A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z];
 const secretCode = letters[Math.floor(Math.random() * letters.length)];
 
-// ================= FAKE PASSWORDS =================
+
 const fakePasswords = ["A1B2", "ZZ99", "HELLO", "ADMIN", "QWERTY"];
 
-// ================= LOCK SYSTEM =================
+
 let wrongAttempts = parseInt(localStorage.getItem("wrongAttempts")) || 0;
 let lockUntil = parseInt(localStorage.getItem("lockUntil")) || 0;
 
@@ -59,7 +59,6 @@ function isLocked() {
     return Date.now() < lockUntil;
 }
 
-// ================= RED SCREEN =================
 function showRedScreen(msg) {
     document.body.innerHTML = `
         <div style="
@@ -81,7 +80,7 @@ function showRedScreen(msg) {
     `;
 }
 
-// ================= UNLOCK =================
+
 function unlock() {
     if (isLocked()) {
         showRedScreen("Locked for 30 minutes!");
@@ -110,7 +109,7 @@ function unlock() {
         return;
     }
 
-    // correct
+
     wrongAttempts = 0;
     localStorage.setItem("wrongAttempts", 0);
 
@@ -125,7 +124,7 @@ function unlock() {
     }, 10000);
 }
 
-// ================= MONEY FUNCTIONS =================
+
 function increase() {
     if (!unlocked) {
         showRedScreen("Click unlock first!");
