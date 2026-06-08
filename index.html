@@ -61,9 +61,12 @@ function showRedScreen(msg) {
     `;
 }
 
-window.onload = function () {
-    document.getElementById("money").textContent = money;
-};
+function updateMoney() {
+    const el = document.getElementById("money");
+    if (el) el.textContent = money;
+}
+
+window.onload = updateMoney;
 
 function unlock() {
     if (isLocked()) {
@@ -118,7 +121,7 @@ function decrease() {
 }
 
 function save() {
-    document.getElementById("money").textContent = money;
+    updateMoney();
     localStorage.setItem("money", money);
 }
 </script>
