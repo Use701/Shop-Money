@@ -1,15 +1,4 @@
-<!DOCTYPE html>
-<html>
-<body>
-
-<h2>My Money: $<span id="money">0</span></h2>
-
-<button onclick="unlock()">🔓 Unlock</button>
-<button onclick="increase()">Increase</button>
-<button onclick="decrease()">Decrease</button>
-
 <script>
-
 let money = parseInt(localStorage.getItem("money")) || 0;
 document.getElementById("money").textContent = money;
 
@@ -45,11 +34,7 @@ const Y = "🎯";
 const Z = "👁️";
 
 
-const letters = [A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z];
 const secretCode = Q;
-const secretcode = F;
-
-const SecretCode = D;
 
 
 let wrongAttempts = parseInt(localStorage.getItem("wrongAttempts")) || 0;
@@ -80,23 +65,20 @@ function showRedScreen(msg) {
     `;
 }
 
-
 function unlock() {
     if (isLocked()) {
         showRedScreen("Locked for 30 minutes!");
         return;
     }
 
-    let code = prompt(
-        "Enter secret code:\nFake hints: " + fakePasswords.join(", ")
-    );
+    let code = prompt("Enter secret code:");
 
     if (code !== secretCode) {
         wrongAttempts++;
         localStorage.setItem("wrongAttempts", wrongAttempts);
 
         if (wrongAttempts >= 3) {
-            lockUntil = Date.now() + 30 * 60 * 1000; // 30 min lock
+            lockUntil = Date.now() + 30 * 60 * 1000;
             localStorage.setItem("lockUntil", lockUntil);
 
             wrongAttempts = 0;
@@ -108,7 +90,6 @@ function unlock() {
         }
         return;
     }
-
 
     wrongAttempts = 0;
     localStorage.setItem("wrongAttempts", 0);
@@ -124,23 +105,14 @@ function unlock() {
     }, 10000);
 }
 
-
 function increase() {
-    if (!unlocked) {
-        showRedScreen("Click unlock first!");
-        return;
-    }
-
+    if (!unlocked) return showRedScreen("Click unlock first!");
     money++;
     save();
 }
 
 function decrease() {
-    if (!unlocked) {
-        showRedScreen("Click unlock first!");
-        return;
-    }
-
+    if (!unlocked) return showRedScreen("Click unlock first!");
     money--;
     save();
 }
@@ -150,6 +122,3 @@ function save() {
     localStorage.setItem("money", money);
 }
 </script>
-
-</body>
-</html>
