@@ -12,10 +12,12 @@
 let money = parseInt(localStorage.getItem("money")) || 0;
 let unlocked = false;
 let unlockTimer = null;
-
+let A = "089786"
+let B = "132435"
+let C = "123456"
 document.getElementById("money").textContent = money;
 
-const secretCode = "You Can't hack this one :)";
+const secretCode = "A";
 
 function showRedScreen(msg) {
     document.body.innerHTML = `
