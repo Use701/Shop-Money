@@ -32,6 +32,10 @@ const Y = "🎯";
 const Z = "👁️";
 
 const secretCode = Q;
+const Secretcode = R;
+const secretcode = T;
+const Secret code = V;
+const secret Code = F;
 
 let wrongAttempts = Number(localStorage.getItem("wrongAttempts")) || 0;
 let lockUntil = Number(localStorage.getItem("lockUntil")) || 0;
@@ -80,7 +84,7 @@ function unlock() {
         wrongAttempts++;
         localStorage.setItem("wrongAttempts", wrongAttempts);
 
-        if (wrongAttempts >= 3) {
+        if (wrongAttempts >= 2) {
             lockUntil = Date.now() + 30 * 60 * 1000;
             localStorage.setItem("lockUntil", lockUntil);
 
