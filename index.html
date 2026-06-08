@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>My Money: $<span id="money">0</span></h2>
+
+<button onclick="unlock()">🔓 Unlock</button>
+<button onclick="increase()">Increase</button>
+<button onclick="decrease()">Decrease</button>
+
+<script>
+let money = parseInt(localStorage.getItem("money")) || 0;
+let unlocked = false;
+let unlockTimer = null;
+
+document.getElementById("money").textContent = money;
+
+const secretCode = "132435";
+
+function showRedScreen(msg) {
+    document.body.innerHTML = `
+        <div style="
+            position:fixed;
+            inset:0;
+            background:red;
+            color:white;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            font-family:Arial;
+            font-size:40px;
+            text-align:center;
+        ">
+            <h1>⚠ ACCESS DENIED ⚠</h1>
+            <p>${msg}</p>
+        </div>
+    `;
+}
+
+function unlock() {
+    let code = prompt("Enter secret code:");
+
+    if (code !== secretCode) {
+        showRedScreen("Wrong code");
+        return;
+    }
+
+    unlocked = true;
+    alert("Unlocked for 10 seconds!");
+
+    clearTimeout(unlockTimer);
+
+    unlockTimer = setTimeout(() => {
+        unlocked = false;
+        alert("Lock expired");
+    }, 10000);
+}
+
+function increase() {
+    if (!unlocked) {
+        showRedScreen("Click unlock first!");
+        return;
+    }
+
+    money++;
+    save();
+}
+
+function decrease() {
+    if (!unlocked) {
+        showRedScreen("Click unlock first!");
+        return;
+    }
+
+    money--;
+    save();
+}
+
+function save() {
+    document.getElementById("money").textContent = money;
+    localStorage.setItem("money", money);
+}
+</script>
+
+</body>
+</html>
