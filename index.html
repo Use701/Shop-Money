@@ -1,3 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shop Money</title>
+</head>
+<body>
+
+<h1>Money: <span id="money">0</span></h1>
+
+<button onclick="unlock()">Unlock</button>
+<button onclick="increase()">+</button>
+<button onclick="decrease()">-</button>
+
 <script>
 let money = Number(localStorage.getItem("money")) || 0;
 
@@ -128,3 +142,6 @@ function save() {
     localStorage.setItem("money", money);
 }
 </script>
+
+</body>
+</html>
