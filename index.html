@@ -1,14 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Shop Money</title>
+<meta charset="UTF-8">
+<title>Shop Money</title>
+
+<style>
+#unlockBtn {
+    position: fixed;
+    opacity: 0; /* invisible */
+    width: 100px;
+    height: 40px;
+}
+</style>
+
 </head>
 <body>
 
 <h1>Money: <span id="money">0</span></h1>
 
-<button onclick="unlock()">🔓Unlock</button>
+<button id="unlockBtn" onclick="unlock()">🔓Unlock</button>
 <button onclick="increase()">+</button>
 <button onclick="decrease()">-</button>
 
@@ -19,36 +29,62 @@ let unlocked = false;
 let unlockTimer = null;
 
 const A = "😡";
+
 const B = "😈";
+
 const C = "😂";
+
 const D = "😭";
+
 const E = "😎";
+
 const F = "🥶";
+
 const G = "🤡";
+
 const H = "👻";
+
 const I = "💀";
+
 const J = "😺";
+
 const K = "🐸";
+
 const L = "🦊";
+
 const M = "🐵";
+
 const N = "🧠";
+
 const O = "🔥";
+
 const P = "⚡";
-const Q = "🌈";
-const R = "🌀";
+
+const Q = "🤮";
+
+const R = "🫆";
+
 const S = "⭐";
+
 const T = "🌙";
+
 const U = "☠️";
+
 const V = "🧊";
+
 const W = "🍀";
+
 const X = "🪐";
+
 const Y = "🎯";
+
 const Z = "👁️";
 
-const secretCode = Q;
-const Secretcode = R;
-const secretcode = T;
+const Secretcode = P;
 
+const secretCode = R;
+
+const secretcode = V;
 
 let wrongAttempts = Number(localStorage.getItem("wrongAttempts")) || 0;
 let lockUntil = Number(localStorage.getItem("lockUntil")) || 0;
@@ -83,7 +119,20 @@ function updateMoney() {
     if (el) el.textContent = money;
 }
 
-window.onload = updateMoney;
+function randomizeUnlockButton() {
+    const btn = document.getElementById("unlockBtn");
+
+    const maxX = window.innerWidth - 100;
+    const maxY = window.innerHeight - 40;
+
+    btn.style.left = Math.random() * maxX + "px";
+    btn.style.top = Math.random() * maxY + "px";
+}
+
+window.onload = function() {
+    updateMoney();
+    randomizeUnlockButton();
+};
 
 function unlock() {
     if (isLocked()) {
@@ -105,8 +154,6 @@ function unlock() {
             localStorage.setItem("wrongAttempts", 0);
 
             showRedScreen("Too many wrong attempts! Locked for 30 minutes.");
-        } else {
-            alert("Wrong code! Attempts: " + wrongAttempts + "/3");
         }
         return;
     }
