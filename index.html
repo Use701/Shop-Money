@@ -24,15 +24,15 @@ body {
     user-select: none;
 }
 
-/* corners */
-.tiger {
-    bottom: 20px;
-    right: 20px;
-}
-
 .elephant {
     bottom: 20px;
     left: 20px;
+}
+
+.monkey {
+    top: 20px;
+    left: 20px;
+    font-size: 90px;
 }
 
 .giraffe {
@@ -41,10 +41,9 @@ body {
     font-size: 140px;
 }
 
-.monkey {
-    top: 20px;
-    left: 20px;
-    font-size: 90px;
+.tiger {
+    bottom: 20px;
+    right: 20px;
 }
 
 /* ===== UI ===== */
@@ -56,7 +55,6 @@ body {
     justify-content: center;
     align-items: center;
     gap: 15px;
-    z-index: 1;
 }
 
 .money-controls {
@@ -101,22 +99,40 @@ button {
 
 <script>
 let unlocked = false;
-
-/* SECRET ORDER */
-const correctOrder = ["elephant", "monkey", "elephant"];
 let playerOrder = [];
-
-/* MONEY */
 let money = 0;
 
+/* SECRET CODE */
+const correctOrder = ["elephant", "monkey", "elephant"];
+
+/* UPDATE MONEY */
 function updateMoney() {
     document.getElementById("money").textContent = money;
+}
+
+/* RED SCREEN */
+function showRedScreen(msg) {
+    document.body.innerHTML = `
+        <div style="
+            position:fixed;
+            inset:0;
+            background:red;
+            color:white;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            font-size:50px;
+            font-weight:bold;
+        ">
+            ⚠️ ${msg} ⚠️
+        </div>
+    `;
 }
 
 /* + BUTTON */
 function increase() {
     if (!unlocked) {
-        alert("Unlock first!");
+        showRedScreen("Unlock First");
         return;
     }
 
@@ -127,7 +143,7 @@ function increase() {
 /* - BUTTON */
 function decrease() {
     if (!unlocked) {
-        alert("Unlock first!");
+        showRedScreen("Unlock First");
         return;
     }
 
@@ -138,17 +154,16 @@ function decrease() {
 /* ANIMAL SEQUENCE */
 function animalClick(animal) {
 
-    const expectedAnimal = correctOrder[playerOrder.length];
+    const expected = correctOrder[playerOrder.length];
 
-    /* Ignore wrong clicks */
-    if (animal !== expectedAnimal) {
+    // Ignore wrong clicks (no reset, no penalty)
+    if (animal !== expected) {
         return;
     }
 
     playerOrder.push(animal);
 
     if (playerOrder.length === correctOrder.length) {
-
         unlocked = true;
         playerOrder = [];
 
