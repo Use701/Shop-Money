@@ -28,6 +28,7 @@ body {
 #elephant { bottom: 20px; left: 20px; font-size: 130px; }
 #tiger { bottom: 50px; right: 120px; font-size: 110px; }
 
+/* 🍌 */
 #banana {
     position: fixed;
     top: 120px;
@@ -65,11 +66,9 @@ button {
     color: white;
 }
 
-/* hidden unlock button */
+/* ===== INVISIBLE UNLOCK BUTTON ===== */
 #unlockBtn {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
     width: 80px;
     height: 40px;
     opacity: 0;
@@ -82,9 +81,11 @@ button {
 <body>
 
 <!-- 🐾 ANIMALS -->
-<button class="animal-btn" id="tiger" onclick="animalClick('tiger')">🐯</button>
-<button class="animal-btn" id="elephant" onclick="animalClick('elephant')">🐘</button>
-<button class="animal-btn" id="giraffe" onclick="animalClick('giraffe')">🦒</button>
+<button id="tiger" class="animal-btn" onclick="animalClick('tiger')">🐯</button>
+<button id="elephant" class="animal-btn" onclick="animalClick('elephant')">🐘</button>
+<button id="giraffe" class="animal-btn" onclick="animalClick('giraffe')">🦒</button>
+
+<div id="banana">🍌</div>
 
 <!-- UI -->
 <div class="center">
@@ -98,7 +99,7 @@ button {
 
 </div>
 
-<!-- invisible unlock -->
+<!-- hidden unlock -->
 <button id="unlockBtn" onclick="unlockClick()"></button>
 
 <script type="module">
@@ -169,22 +170,31 @@ window.decrease = function () {
     runTransaction(moneyRef, v => (v || 0) - 1);
 };
 
-/* ===== ANIMAL CLICK ORDER ===== */
+/* ===== ANIMAL ORDER ===== */
 window.animalClick = function (animal) {
 
     playerOrder.push(animal);
 
-    let index = playerOrder.length - 1;
+    let i = playerOrder.length - 1;
 
-    if (playerOrder[index] !== correctOrder[index]) {
+    if (playerOrder[i] !== correctOrder[i]) {
         playerOrder = [];
         alert("❌ Wrong order! Restart!");
         return;
     }
 
     if (playerOrder.length === correctOrder.length) {
-        document.getElementById("unlockBtn").style.display = "block";
-        alert("✅ Correct! Hidden button appeared!");
+        const btn = document.getElementById("unlockBtn");
+        btn.style.display = "block";
+
+        // ✅ RANDOM POSITION ONLY ONCE
+        const x = Math.random() * (window.innerWidth - 80);
+        const y = Math.random() * (window.innerHeight - 40);
+
+        btn.style.left = x + "px";
+        btn.style.top = y + "px";
+
+        alert("✅ Correct order! Unlock button appeared!");
     }
 };
 
@@ -193,7 +203,7 @@ function isLocked() {
     return Date.now() < lockUntil;
 }
 
-/* ===== UNLOCK BUTTON ===== */
+/* ===== UNLOCK ===== */
 window.unlockClick = function () {
 
     if (isLocked()) {
@@ -201,7 +211,7 @@ window.unlockClick = function () {
         return;
     }
 
-    let code = prompt("Enter secret password:");
+    let code = prompt("Enter password:");
 
     if (code !== "🫆") {
         wrongAttempts++;
@@ -217,9 +227,7 @@ window.unlockClick = function () {
     unlocked = true;
     alert("Unlocked for 10 seconds!");
 
-    setTimeout(() => {
-        unlocked = false;
-    }, 10000);
+    setTimeout(() => unlocked = false, 10000);
 };
 </script>
 
