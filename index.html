@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Shop Money</title>
+<title>Shop Money (Shared)</title>
 
 <style>
 #unlockBtn {
     position: fixed;
-    opacity: 0; /* invisible */
+    opacity: 0;
     width: 100px;
     height: 40px;
 }
 </style>
-
 </head>
+
 <body>
 
 <h1>Money: <span id="money">0</span></h1>
@@ -22,76 +22,67 @@
 <button onclick="increase()">+</button>
 <button onclick="decrease()">-</button>
 
-<script>
-let money = Number(localStorage.getItem("money")) || 0;
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  set
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
+/* 🔥 FIREBASE CONFIG (REPLACE THIS) */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const moneyRef = ref(db, "money");
+
+/* GLOBAL STATE */
+let money = 0;
 let unlocked = false;
-let unlockTimer = null;
+let wrongAttempts = 0;
+let lockUntil = 0;
 
-const A = "😡";
-const B = "😈";
+/* EMOJIS (your original idea kept) */
+const secretCode = "🫆"; // R
 
-const C = "😂";
+/* LIVE SYNC (everyone sees same money) */
+onValue(moneyRef, (snapshot) => {
+    money = snapshot.val() || 0;
+    document.getElementById("money").textContent = money;
+});
 
-const D = "😭";
+/* SAVE TO FIREBASE */
+function saveMoney() {
+    set(moneyRef, money);
+}
 
-const E = "😎";
+/* RANDOM BUTTON POSITION */
+function randomizeUnlockButton() {
+    const btn = document.getElementById("unlockBtn");
 
-const F = "🥶";
+    const maxX = window.innerWidth - 100;
+    const maxY = window.innerHeight - 40;
 
-const G = "🤡";
+    btn.style.left = Math.random() * maxX + "px";
+    btn.style.top = Math.random() * maxY + "px";
+}
 
-const H = "👻";
-
-const I = "💀";
-
-const J = "😺";
-
-const K = "🐸";
-
-const L = "🦊";
-
-const M = "🐵";
-
-const N = "🧠";
-
-const O = "🔥";
-
-const P = "⚡";
-
-const Q = "🤮";
-
-const R = "🫆";
-
-const S = "⭐";
-
-const T = "🌙";
-
-const U = "☠️";
-
-const V = "🧊";
-
-const W = "🍀";
-
-const X = "🪐";
-
-const Y = "🎯";
-
-const Z = "👁️";
-
-const Secretcode = P;
-
-const secretCode = R;
-
-const secretcode = V;
-
-let wrongAttempts = Number(localStorage.getItem("wrongAttempts")) || 0;
-let lockUntil = Number(localStorage.getItem("lockUntil")) || 0;
-
+/* LOCK CHECK */
 function isLocked() {
     return Date.now() < lockUntil;
 }
 
+/* RED SCREEN */
 function showRedScreen(msg) {
     document.body.innerHTML = `
         <div style="
@@ -113,27 +104,8 @@ function showRedScreen(msg) {
     `;
 }
 
-function updateMoney() {
-    const el = document.getElementById("money");
-    if (el) el.textContent = money;
-}
-
-function randomizeUnlockButton() {
-    const btn = document.getElementById("unlockBtn");
-
-    const maxX = window.innerWidth - 100;
-    const maxY = window.innerHeight - 40;
-
-    btn.style.left = Math.random() * maxX + "px";
-    btn.style.top = Math.random() * maxY + "px";
-}
-
-window.onload = function() {
-    updateMoney();
-    randomizeUnlockButton();
-};
-
-function unlock() {
+/* UNLOCK SYSTEM */
+window.unlock = function () {
     if (isLocked()) {
         showRedScreen("Locked for 30 minutes!");
         return;
@@ -143,50 +115,43 @@ function unlock() {
 
     if (code !== secretCode) {
         wrongAttempts++;
-        localStorage.setItem("wrongAttempts", wrongAttempts);
 
         if (wrongAttempts >= 1) {
             lockUntil = Date.now() + 30 * 60 * 1000;
-            localStorage.setItem("lockUntil", lockUntil);
-
             wrongAttempts = 0;
-            localStorage.setItem("wrongAttempts", 0);
-
-            showRedScreen("Too many wrong attempts! Locked for 30 minutes.");
+            showRedScreen("Wrong code! Locked for 30 minutes.");
         }
         return;
     }
 
     wrongAttempts = 0;
-    localStorage.setItem("wrongAttempts", 0);
-
     unlocked = true;
+
     alert("Unlocked for 10 seconds!");
 
-    clearTimeout(unlockTimer);
-
-    unlockTimer = setTimeout(() => {
+    setTimeout(() => {
         unlocked = false;
         alert("Lock expired");
     }, 10000);
-}
+};
 
-function increase() {
+/* MONEY FUNCTIONS */
+window.increase = function () {
     if (!unlocked) return showRedScreen("Click unlock first!");
     money++;
-    save();
-}
+    saveMoney();
+};
 
-function decrease() {
+window.decrease = function () {
     if (!unlocked) return showRedScreen("Click unlock first!");
     money--;
-    save();
-}
+    saveMoney();
+};
 
-function save() {
-    updateMoney();
-    localStorage.setItem("money", money);
-}
+/* INIT */
+window.onload = function () {
+    randomizeUnlockButton();
+};
 </script>
 
 </body>
