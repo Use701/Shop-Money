@@ -81,7 +81,7 @@ button {
 
 <body>
 
-<!-- 🐾 ANIMALS (REAL BUTTONS) -->
+<!-- 🐾 ANIMALS -->
 <button class="animal-btn tiger" onclick="animalClick('tiger')">🐯</button>
 <button class="animal-btn monkey" onclick="animalClick('monkey')">🐒</button>
 <button class="animal-btn elephant" onclick="animalClick('elephant')">🐘</button>
@@ -103,8 +103,8 @@ button {
 let unlocked = false;
 let lockUntil = 0;
 
-/* ORDER */
-const correctOrder = ["tiger", "elephant", "giraffe"];
+/* SECRET ORDER */
+const correctOrder = ["elephant", "monkey", "elephant"];
 let playerOrder = [];
 
 /* MONEY */
@@ -149,11 +149,6 @@ function decrease() {
 /* ANIMALS */
 function animalClick(animal) {
 
-    if (animal === "monkey") {
-        alert("🐒 distraction!");
-        return;
-    }
-
     playerOrder.push(animal);
 
     for (let i = 0; i < playerOrder.length; i++) {
@@ -167,6 +162,7 @@ function animalClick(animal) {
 
     if (playerOrder.length === correctOrder.length) {
         unlocked = true;
+        playerOrder = [];
 
         alert("✅ Correct order! You are unlocked for 10 seconds.");
 
