@@ -1,167 +1,119 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Shop Money Game</title>
-
-<style>
-body {
-    margin: 0;
-    font-family: Arial;
-    overflow: hidden;
-    color: white;
-    background: linear-gradient(to bottom, #1db954, #0b6623);
-}
-
-/* ===== ANIMAL BUTTONS ===== */
-.animal-btn {
-    position: fixed;
-    background: transparent;
-    border: none;
-    font-size: 110px;
-    cursor: pointer;
-    z-index: 9999;
-    user-select: none;
-}
-
-.elephant {
-    bottom: 20px;
-    left: 20px;
-}
-
-.monkey {
-    top: 20px;
-    left: 20px;
-    font-size: 90px;
-}
-
-.giraffe {
-    top: 20px;
-    right: 20px;
-    font-size: 140px;
-}
-
-.tiger {
-    bottom: 20px;
-    right: 20px;
-}
-
-/* ===== UI ===== */
-.center {
-    position: relative;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-}
-
-.money-controls {
-    display: flex;
-    gap: 10px;
-}
-
-button {
-    padding: 12px 20px;
-    font-size: 18px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-.action {
-    background: #2ecc71;
-    color: white;
-}
-</style>
-</head>
-
-<body>
-
-<!-- 🐾 ANIMALS -->
-<button class="animal-btn tiger" onclick="animalClick('tiger')">🐯</button>
-<button class="animal-btn monkey" onclick="animalClick('monkey')">🐒</button>
-<button class="animal-btn elephant" onclick="animalClick('elephant')">🐘</button>
-<button class="animal-btn giraffe" onclick="animalClick('giraffe')">🦒</button>
-
-<!-- UI -->
-<div class="center">
-
-    <h1>💰 Shop Money: <span id="money">0</span></h1>
-
-    <div class="money-controls">
-        <button onclick="increase()" class="action">+</button>
-        <button onclick="decrease()" class="action">-</button>
-    </div>
-
-</div>
-
-<script>
 let unlocked = false;
 let failed = false;
 
 let playerOrder = [];
 let money = 0;
 
+let finalGateActive = false;
+let lockUntil = 0;
+
 /* SECRET CODE */
 const correctOrder = ["elephant", "monkey", "elephant"];
+const secretPasscode = "1234"; // change this
 
+const unlockBtn = document.createElement("button");
+unlockBtn.innerText = " ";
+unlockBtn.style.position = "fixed";
+unlockBtn.style.width = "60px";
+unlockBtn.style.height = "60px";
+unlockBtn.style.opacity = "0";
+unlockBtn.style.zIndex = "99999";
+unlockBtn.style.border = "none";
+unlockBtn.style.cursor = "pointer";
+unlockBtn.style.background = "transparent";
+unlockBtn.style.display = "none";
+
+document.body.appendChild(unlockBtn);
+
+/* LOCK CHECK */
+function isLocked() {
+    if (Date.now() < lockUntil) return true;
+    return false;
+}
+
+/* MONEY */
 function updateMoney() {
     document.getElementById("money").textContent = money;
 }
 
-/* + BUTTON */
-function increase() {
-    if (!unlocked) {
-        alert("Unlock first!");
-        return;
+/* BLOCK IF LOCKED */
+function blockIfLocked() {
+    if (isLocked()) {
+        document.body.innerHTML = `
+            <div style="
+                position:fixed;top:0;left:0;width:100%;height:100%;
+                background:black;color:red;
+                display:flex;align-items:center;justify-content:center;
+                font-size:28px;text-align:center;">
+                🔒 LOCKED FOR 30 MINUTES 🔒
+            </div>
+        `;
+        return true;
     }
+    return false;
+}
 
+/* + / - */
+function increase() {
+    if (blockIfLocked()) return;
+    if (!unlocked) return alert("Unlock first!");
     money++;
     updateMoney();
 }
 
-/* - BUTTON */
 function decrease() {
-    if (!unlocked) {
-        alert("Unlock first!");
-        return;
-    }
-
+    if (blockIfLocked()) return;
+    if (!unlocked) return alert("Unlock first!");
     money--;
     updateMoney();
 }
 
-/* ANIMAL LOGIC */
+/* ANIMAL CLICK */
 function animalClick(animal) {
-
-    if (failed || unlocked) return;
+    if (blockIfLocked()) return;
+    if (failed || unlocked || finalGateActive) return;
 
     const expected = correctOrder[playerOrder.length];
 
     if (animal !== expected) {
-        failed = true;   // ❌ PERMANENT FAIL
+        failed = true;
+        alert("❌ Wrong order!");
         return;
     }
 
     playerOrder.push(animal);
 
     if (playerOrder.length === correctOrder.length) {
-        unlocked = true;
-        playerOrder = [];
-
-        alert("✅ Correct order! You are unlocked for 10 seconds.");
-
-        setTimeout(() => {
-            unlocked = false;
-        }, 10000);
+        triggerFinalGate();
     }
 }
 
+/* FINAL GATE */
+function triggerFinalGate() {
+    finalGateActive = true;
+
+    // spawn invisible button randomly
+    unlockBtn.style.display = "block";
+    unlockBtn.style.left = Math.random() * (window.innerWidth - 60) + "px";
+    unlockBtn.style.top = Math.random() * (window.innerHeight - 60) + "px";
+
+    alert("✅ Sequence correct! Find the hidden unlock point.");
+}
+
+/* CLICK INVISIBLE BUTTON */
+unlockBtn.onclick = function () {
+    const input = prompt("Enter secret passcode:");
+
+    if (input === secretPasscode) {
+        unlocked = true;
+        finalGateActive = false;
+        unlockBtn.style.display = "none";
+        alert("🔓 Unlocked!");
+    } else {
+        lockUntil = Date.now() + 30 * 60 * 1000; // 30 min
+        blockIfLocked();
+    }
+};
+
 /* INIT */
 updateMoney();
-</script>
-
-</body>
-</html>
