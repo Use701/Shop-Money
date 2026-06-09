@@ -28,15 +28,7 @@ body {
 #giraffe { top: 20px; right: 20px; font-size: 150px; }
 #monkey { top: 80px; left: 80px; font-size: 90px; }
 
-/* banana */
-#banana {
-    position: fixed;
-    top: 120px;
-    left: 140px;
-    font-size: 40px;
-}
-
-/* ===== UI ===== */
+/* UI */
 .center {
     position: relative;
     z-index: 5;
@@ -66,7 +58,7 @@ button {
     color: white;
 }
 
-/* ===== UNLOCK BUTTON ===== */
+/* INVISIBLE BUTTON */
 #unlockBtn {
     position: fixed;
     width: 80px;
@@ -86,8 +78,6 @@ button {
 <button id="elephant" class="animal-btn" onclick="animalClick('elephant')">🐘</button>
 <button id="giraffe" class="animal-btn" onclick="animalClick('giraffe')">🦒</button>
 
-<div id="banana">🍌</div>
-
 <!-- UI -->
 <div class="center">
 
@@ -100,7 +90,7 @@ button {
 
 </div>
 
-<!-- unlock -->
+<!-- INVISIBLE UNLOCK BUTTON -->
 <button id="unlockBtn" onclick="unlockClick()"></button>
 
 <script type="module">
@@ -129,9 +119,8 @@ const moneyRef = ref(db, "money");
 /* ===== STATE ===== */
 let unlocked = false;
 let lockUntil = 0;
-let wrongAttempts = 0;
 
-/* ===== SEQUENCE ===== */
+/* ===== ORDER ===== */
 const correctOrder = ["tiger", "elephant", "giraffe"];
 let playerOrder = [];
 
@@ -174,26 +163,23 @@ window.decrease = function () {
 /* ===== ANIMALS ===== */
 window.animalClick = function (animal) {
 
-    // 🐒 monkey = distraction only
     if (animal === "monkey") {
         alert("🐒 distraction!");
         return;
     }
 
     playerOrder.push(animal);
+    console.log("Clicked order:", playerOrder);
 
-    let i = playerOrder.length - 1;
-
-    // ❌ WRONG ORDER → 30 MIN LOCK
-    if (playerOrder[i] !== correctOrder[i]) {
-        playerOrder = [];
-        lockUntil = Date.now() + 30 * 60 * 1000;
-        wrongAttempts = 0;
-        showRedScreen("Wrong order! Locked 30 minutes.");
-        return;
+    for (let i = 0; i < playerOrder.length; i++) {
+        if (playerOrder[i] !== correctOrder[i]) {
+            playerOrder = [];
+            lockUntil = Date.now() + 30 * 60 * 1000;
+            showRedScreen("Wrong order! Locked 30 minutes.");
+            return;
+        }
     }
 
-    // ✅ SUCCESS
     if (playerOrder.length === correctOrder.length) {
         const btn = document.getElementById("unlockBtn");
         btn.style.display = "block";
@@ -208,15 +194,10 @@ window.animalClick = function (animal) {
     }
 };
 
-/* ===== LOCK CHECK ===== */
-function isLocked() {
-    return Date.now() < lockUntil;
-}
-
 /* ===== UNLOCK ===== */
 window.unlockClick = function () {
 
-    if (isLocked()) {
+    if (Date.now() < lockUntil) {
         showRedScreen("Locked for 30 minutes!");
         return;
     }
