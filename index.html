@@ -13,38 +13,35 @@ body {
     background: linear-gradient(to bottom, #1db954, #0b6623);
 }
 
-/* ===== ANIMALS = BUTTONS ===== */
+/* ===== ANIMAL BUTTONS ===== */
 .animal-btn {
     position: fixed;
-    background: none;
+    background: transparent;
     border: none;
-    cursor: pointer;
     font-size: 110px;
-    transition: transform 0.1s;
-}
-
-.animal-btn:active {
-    transform: scale(0.9);
+    cursor: pointer;
+    z-index: 9999;
+    user-select: none;
 }
 
 /* corners */
-#tiger {
+.tiger {
     bottom: 20px;
     right: 20px;
 }
 
-#elephant {
+.elephant {
     bottom: 20px;
     left: 20px;
 }
 
-#giraffe {
+.giraffe {
     top: 20px;
     right: 20px;
     font-size: 140px;
 }
 
-#monkey {
+.monkey {
     top: 20px;
     left: 20px;
     font-size: 90px;
@@ -59,7 +56,7 @@ body {
     justify-content: center;
     align-items: center;
     gap: 15px;
-    z-index: 5;
+    z-index: 1;
 }
 
 .money-controls {
@@ -84,38 +81,40 @@ button {
 
 <body>
 
-<!-- 🐾 ANIMALS (now are the actual buttons) -->
-<button class="animal-btn" id="tiger" onclick="animalClick('tiger')">🐯</button>
-<button class="animal-btn" id="monkey" onclick="animalClick('monkey')">🐒</button>
-<button class="animal-btn" id="elephant" onclick="animalClick('elephant')">🐘</button>
-<button class="animal-btn" id="giraffe" onclick="animalClick('giraffe')">🦒</button>
+<!-- 🐾 ANIMALS (REAL BUTTONS) -->
+<button class="animal-btn tiger" onclick="animalClick('tiger')">🐯</button>
+<button class="animal-btn monkey" onclick="animalClick('monkey')">🐒</button>
+<button class="animal-btn elephant" onclick="animalClick('elephant')">🐘</button>
+<button class="animal-btn giraffe" onclick="animalClick('giraffe')">🦒</button>
 
 <!-- UI -->
 <div class="center">
+
     <h1>💰 Shop Money: <span id="money">0</span></h1>
 
     <div class="money-controls">
         <button onclick="increase()" class="action">+</button>
         <button onclick="decrease()" class="action">-</button>
     </div>
+
 </div>
 
 <script>
 let unlocked = false;
 let lockUntil = 0;
 
-/* order */
+/* ORDER */
 const correctOrder = ["tiger", "elephant", "giraffe"];
 let playerOrder = [];
 
-/* money */
+/* MONEY */
 let money = 0;
 
 function updateMoney() {
     document.getElementById("money").textContent = money;
 }
 
-/* red screen */
+/* RED SCREEN */
 function showRedScreen(msg) {
     document.body.innerHTML = `
         <div style="
@@ -168,6 +167,7 @@ function animalClick(animal) {
 
     if (playerOrder.length === correctOrder.length) {
         unlocked = true;
+
         alert("✅ Correct order! You are unlocked for 10 seconds.");
 
         setTimeout(() => {
@@ -176,6 +176,7 @@ function animalClick(animal) {
     }
 }
 
+/* init */
 updateMoney();
 </script>
 
