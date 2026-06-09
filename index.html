@@ -16,7 +16,6 @@ body {
     background: linear-gradient(to bottom, #1db954, #0b6623);
 }
 
-/* ANIMALS */
 .animal-btn {
     position: fixed;
     background: transparent;
@@ -32,7 +31,6 @@ body {
 .giraffe { top: 20px; right: 20px; font-size: 140px; }
 .tiger { bottom: 20px; right: 20px; }
 
-/* UI */
 .center {
     position: relative;
     height: 100vh;
@@ -61,7 +59,6 @@ button {
     color: white;
 }
 
-/* WARNING */
 #warningScreen {
     position: fixed;
     top: 0;
@@ -100,6 +97,8 @@ button {
 </div>
 
 <script>
+(() => {
+
 /* ================= FIREBASE ================= */
 const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
@@ -120,45 +119,17 @@ let finalGateActive = false;
 let lockUntil = 0;
 
 let money = 0;
-let A = "👾 Alien"
-let B = "🍌 Banana chaos"
-let C = "🐱 Cat energy"
-let D = "💎 Diamond vibes"
-let E = "⚡ Electric spark"
-let F = "🔥 Fire mode"
-let G = "🪙 Gold coin"
-let H = "🏠 Home base"
-let I = "🧊 Ice cold"
-let J = "🃏 Joker trick"
-let K = "🔑 Secret key"
-let L = "🦁 Lion roar"
-let M = "🌙 Moonlight"
-let N = "🧠 Brain blast"
-let O = "👁️ Eye see you"
-let P = "🍕 Pizza time"
-let Q = "❓ Mystery question"
-let R = "🤖 Robot mode"
-let S = "⭐ Star power"
-let T = "⏰ Time warp"
-let U = "☂️ Umbrella shield"
-let V = "🎮 Game controller"
-let W = "🌊 Wave rider"
-let X = "❌ X factor"
-let Y = "🟡 Yellow flash"
-let Z = "⚡ Zero gravity zone"
-const correctOrder = ["elephant", "monkey", "elephant"];
-const Secretpasscode = "L";
-const secretPasscode = "G";
-const SecretPasscode = "D";
 
-/* LOAD MONEY */
+/* UPDATED ORDER */
+const correctOrder = ["tiger", "tiger", "elephant"];
+
+/* ================= LOAD MONEY ================= */
 moneyRef.on("value", (snap) => {
-    const val = snap.val();
-    money = (val === null || val === undefined) ? 0 : val;
-    updateMoney();
+    money = snap.val() || 0;
+    document.getElementById("money").textContent = money;
 });
 
-/* WARNING */
+/* ================= WARNING ================= */
 function showWarning() {
     const screen = document.getElementById("warningScreen");
     screen.style.display = "flex";
@@ -168,7 +139,7 @@ function showWarning() {
     }, 1200);
 }
 
-/* LOCK */
+/* ================= LOCK SYSTEM ================= */
 function isLocked() {
     return Date.now() < lockUntil;
 }
@@ -189,12 +160,12 @@ function checkLock() {
     return false;
 }
 
-/* UI */
+/* ================= MONEY UI ================= */
 function updateMoney() {
     document.getElementById("money").textContent = money;
 }
 
-/* + / - FIXED */
+/* ================= SAFE FIREBASE UPDATE ================= */
 function increase() {
     if (checkLock()) return;
 
@@ -217,7 +188,7 @@ function decrease() {
     moneyRef.transaction(current => (current || 0) - 1);
 }
 
-/* ANIMALS */
+/* ================= ANIMAL PUZZLE ================= */
 function animalClick(animal) {
     if (checkLock()) return;
     if (failed || unlocked || finalGateActive) return;
@@ -236,7 +207,7 @@ function animalClick(animal) {
     }
 }
 
-/* FINAL GATE */
+/* ================= FINAL GATE ================= */
 function triggerFinalGate() {
     finalGateActive = true;
 
@@ -245,7 +216,7 @@ function triggerFinalGate() {
     unlockBtn.style.top = Math.random() * (window.innerHeight - 60) + "px";
 }
 
-/* HIDDEN UNLOCK BUTTON */
+/* ================= HIDDEN UNLOCK BUTTON ================= */
 const unlockBtn = document.createElement("button");
 unlockBtn.style.position = "fixed";
 unlockBtn.style.width = "60px";
@@ -257,7 +228,9 @@ unlockBtn.style.background = "transparent";
 unlockBtn.style.display = "none";
 document.body.appendChild(unlockBtn);
 
-/* UNLOCK */
+/* ================= UNLOCK LOGIC ================= */
+const secretPasscode = "G";
+
 unlockBtn.onclick = function () {
     const input = prompt("Enter secret passcode:");
 
@@ -275,6 +248,8 @@ unlockBtn.onclick = function () {
         checkLock();
     }
 };
+
+})();
 </script>
 
 </body>
