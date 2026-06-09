@@ -7,92 +7,98 @@
 <style>
 #unlockBtn {
     position: fixed;
-    opacity: 0; /* invisible */
+    opacity: 0;
     width: 100px;
     height: 40px;
 }
 </style>
-
 </head>
 <body>
 
 <h1>Money: <span id="money">0</span></h1>
 
-<button id="unlockBtn" onclick="unlock()">🔓Unlock</button>
+<button id="unlockBtn" onclick="unlock()">🔓 Unlock</button>
 <button onclick="increase()">+</button>
 <button onclick="decrease()">-</button>
 
 <script>
-let money = Number(localStorage.getItem("money")) || 0;
+
+// -------------------- SAVE SYSTEM --------------------
+
+const SAVE_KEY = "shop_save";
+const HASH_KEY = "shop_hash";
+
+function createHash(value) {
+    const secret = "X9#2pL@7!k";
+    return btoa(value + "|" + secret);
+}
+
+function encodeMoney(value) {
+    return btoa((value * 37 + 9123).toString());
+}
+
+function decodeMoney(encoded) {
+    try {
+        return (Number(atob(encoded)) - 9123) / 37;
+    } catch {
+        return 0;
+    }
+}
+
+function loadMoney() {
+
+    const encoded = localStorage.getItem(SAVE_KEY);
+    const hash = localStorage.getItem(HASH_KEY);
+
+    if (!encoded || !hash) {
+        saveMoney(0);
+        return 0;
+    }
+
+    const amount = decodeMoney(encoded);
+
+    if (createHash(amount) !== hash) {
+        showRedScreen("Tampering detected!");
+        throw new Error("Save modified");
+    }
+
+    return amount;
+}
+
+function saveMoney(amount) {
+    localStorage.setItem(SAVE_KEY, encodeMoney(amount));
+    localStorage.setItem(HASH_KEY, createHash(amount));
+}
+
+// -------------------- VARIABLES --------------------
+
+let money = loadMoney();
+
+let lastMoney = money;
 
 let unlocked = false;
 let unlockTimer = null;
 
-const A = "😡";
-const B = "😈";
+let wrongAttempts =
+    Number(localStorage.getItem("wrongAttempts")) || 0;
 
-const C = "😂";
+let lockUntil =
+    Number(localStorage.getItem("lockUntil")) || 0;
 
-const D = "😭";
+// -------------------- SECRET CODE --------------------
 
-const E = "😎";
+function verifyCode(input) {
+    return input === "🫆";
+}
 
-const F = "🥶";
-
-const G = "🤡";
-
-const H = "👻";
-
-const I = "💀";
-
-const J = "😺";
-
-const K = "🐸";
-
-const L = "🦊";
-
-const M = "🐵";
-
-const N = "🧠";
-
-const O = "🔥";
-
-const P = "⚡";
-
-const Q = "🤮";
-
-const R = "🫆";
-
-const S = "⭐";
-
-const T = "🌙";
-
-const U = "☠️";
-
-const V = "🧊";
-
-const W = "🍀";
-
-const X = "🪐";
-
-const Y = "🎯";
-
-const Z = "👁️";
-
-const Secretcode = P;
-
-const secretCode = R;
-
-const secretcode = V;
-
-let wrongAttempts = Number(localStorage.getItem("wrongAttempts")) || 0;
-let lockUntil = Number(localStorage.getItem("lockUntil")) || 0;
+// -------------------- LOCK SYSTEM --------------------
 
 function isLocked() {
     return Date.now() < lockUntil;
 }
 
 function showRedScreen(msg) {
+
     document.body.innerHTML = `
         <div style="
             position:fixed;
@@ -104,7 +110,6 @@ function showRedScreen(msg) {
             justify-content:center;
             align-items:center;
             font-family:Arial;
-            font-size:40px;
             text-align:center;
         ">
             <h1>⚠ ACCESS DENIED ⚠</h1>
@@ -114,12 +119,19 @@ function showRedScreen(msg) {
 }
 
 function updateMoney() {
+
     const el = document.getElementById("money");
-    if (el) el.textContent = money;
+
+    if (el) {
+        el.textContent = money;
+    }
 }
 
 function randomizeUnlockButton() {
+
     const btn = document.getElementById("unlockBtn");
+
+    if (!btn) return;
 
     const maxX = window.innerWidth - 100;
     const maxY = window.innerHeight - 40;
@@ -128,12 +140,49 @@ function randomizeUnlockButton() {
     btn.style.top = Math.random() * maxY + "px";
 }
 
-window.onload = function() {
+// -------------------- VALIDATION --------------------
+
+function validateMoney() {
+
+    if (!Number.isInteger(money)) {
+        showRedScreen("Invalid money value!");
+        return false;
+    }
+
+    if (money < 0) {
+        showRedScreen("Negative money detected!");
+        return false;
+    }
+
+    if (money > 1000000) {
+        showRedScreen("Money limit exceeded!");
+        return false;
+    }
+
+    return true;
+}
+
+// -------------------- SAVE --------------------
+
+function save() {
+
+    if (!validateMoney()) return;
+
+    if (Math.abs(money - lastMoney) > 1) {
+        showRedScreen("Invalid money change detected!");
+        return;
+    }
+
+    lastMoney = money;
+
     updateMoney();
-    randomizeUnlockButton();
-};
+    saveMoney(money);
+}
+
+// -------------------- UNLOCK --------------------
 
 function unlock() {
+
     if (isLocked()) {
         showRedScreen("Locked for 30 minutes!");
         return;
@@ -141,52 +190,129 @@ function unlock() {
 
     let code = prompt("Enter secret code:");
 
-    if (code !== secretCode) {
+    if (!verifyCode(code)) {
+
         wrongAttempts++;
-        localStorage.setItem("wrongAttempts", wrongAttempts);
+
+        localStorage.setItem(
+            "wrongAttempts",
+            wrongAttempts
+        );
 
         if (wrongAttempts >= 1) {
-            lockUntil = Date.now() + 30 * 60 * 1000;
-            localStorage.setItem("lockUntil", lockUntil);
+
+            lockUntil =
+                Date.now() + 30 * 60 * 1000;
+
+            localStorage.setItem(
+                "lockUntil",
+                lockUntil
+            );
 
             wrongAttempts = 0;
-            localStorage.setItem("wrongAttempts", 0);
 
-            showRedScreen("Too many wrong attempts! Locked for 30 minutes.");
+            localStorage.setItem(
+                "wrongAttempts",
+                0
+            );
+
+            showRedScreen(
+                "Too many wrong attempts! Locked for 30 minutes."
+            );
         }
+
         return;
     }
 
     wrongAttempts = 0;
-    localStorage.setItem("wrongAttempts", 0);
+
+    localStorage.setItem(
+        "wrongAttempts",
+        0
+    );
 
     unlocked = true;
+
     alert("Unlocked for 10 seconds!");
 
     clearTimeout(unlockTimer);
 
     unlockTimer = setTimeout(() => {
+
         unlocked = false;
+
         alert("Lock expired");
+
     }, 10000);
 }
 
+// -------------------- MONEY BUTTONS --------------------
+
 function increase() {
-    if (!unlocked) return showRedScreen("Click unlock first!");
+
+    if (!unlocked) {
+        return showRedScreen("Click unlock first!");
+    }
+
     money++;
+
     save();
 }
 
 function decrease() {
-    if (!unlocked) return showRedScreen("Click unlock first!");
+
+    if (!unlocked) {
+        return showRedScreen("Click unlock first!");
+    }
+
+    if (money <= 0) {
+        alert("No money left!");
+        return;
+    }
+
     money--;
+
     save();
 }
 
-function save() {
+// -------------------- TAMPER CHECK --------------------
+
+setInterval(() => {
+
+    const encoded =
+        localStorage.getItem(SAVE_KEY);
+
+    const hash =
+        localStorage.getItem(HASH_KEY);
+
+    if (!encoded || !hash) return;
+
+    const amount =
+        decodeMoney(encoded);
+
+    if (createHash(amount) !== hash) {
+
+        showRedScreen(
+            "Save tampering detected!"
+        );
+    }
+
+}, 2000);
+
+// -------------------- STARTUP --------------------
+
+window.onload = function () {
+
     updateMoney();
-    localStorage.setItem("money", money);
-}
+
+    randomizeUnlockButton();
+
+    setInterval(
+        randomizeUnlockButton,
+        1000
+    );
+};
+
 </script>
 
 </body>
