@@ -154,26 +154,23 @@ function animalClick(animal) {
 
     if (animal !== expected) {
         failed = true;
-        alert("❌ Wrong order!");
         return;
     }
 
     playerOrder.push(animal);
 
     if (playerOrder.length === correctOrder.length) {
-        triggerFinalGate();
+        triggerFinalGate(); // silent unlock stage
     }
 }
 
-/* FINAL GATE */
+/* FINAL GATE (NO MESSAGE) */
 function triggerFinalGate() {
     finalGateActive = true;
 
     unlockBtn.style.display = "block";
     unlockBtn.style.left = Math.random() * (window.innerWidth - 60) + "px";
     unlockBtn.style.top = Math.random() * (window.innerHeight - 60) + "px";
-
-    alert("✅ Correct order! Find the hidden button.");
 }
 
 /* CLICK HIDDEN BUTTON */
@@ -184,7 +181,6 @@ unlockBtn.onclick = function () {
         unlocked = true;
         finalGateActive = false;
         unlockBtn.style.display = "none";
-        alert("🔓 Unlocked!");
     } else {
         lockUntil = Date.now() + 30 * 60 * 1000;
         showLockScreen();
