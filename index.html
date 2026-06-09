@@ -13,7 +13,7 @@ body {
     background: linear-gradient(to bottom, #1db954, #0b6623);
 }
 
-/* ANIMALS */
+/* ===== ANIMALS IN CORNERS ===== */
 .animal-btn {
     position: fixed;
     background: transparent;
@@ -22,12 +22,35 @@ body {
     cursor: pointer;
 }
 
-#tiger { bottom: 50px; right: 120px; }
-#elephant { bottom: 20px; left: 20px; font-size: 130px; }
-#giraffe { top: 20px; right: 20px; font-size: 150px; }
-#monkey { top: 80px; left: 80px; font-size: 90px; }
+/* 🦒 top right */
+#giraffe {
+    top: 20px;
+    right: 20px;
+    font-size: 150px;
+}
 
-/* UI */
+/* 🐒 top left */
+#monkey {
+    top: 20px;
+    left: 20px;
+    font-size: 90px;
+}
+
+/* 🐘 bottom left */
+#elephant {
+    bottom: 20px;
+    left: 20px;
+    font-size: 130px;
+}
+
+/* 🐯 bottom right */
+#tiger {
+    bottom: 20px;
+    right: 20px;
+    font-size: 110px;
+}
+
+/* ===== CENTER UI ===== */
 .center {
     position: relative;
     height: 100vh;
@@ -36,6 +59,7 @@ body {
     justify-content: center;
     align-items: center;
     gap: 15px;
+    z-index: 5;
 }
 
 .money-controls {
@@ -56,44 +80,50 @@ button {
     color: white;
 }
 
-/* hidden unlock button */
+/* ===== INVISIBLE BUTTON ===== */
 #unlockBtn {
     position: fixed;
     width: 80px;
     height: 40px;
     opacity: 0;
     display: none;
+    z-index: 10;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ANIMALS -->
-<button class="animal-btn" onclick="animalClick('tiger')">🐯</button>
-<button class="animal-btn" onclick="animalClick('monkey')">🐒</button>
-<button class="animal-btn" onclick="animalClick('elephant')">🐘</button>
-<button class="animal-btn" onclick="animalClick('giraffe')">🦒</button>
+<!-- 🐾 ANIMALS -->
+<button id="tiger" onclick="animalClick('tiger')">🐯</button>
+<button id="monkey" onclick="animalClick('monkey')">🐒</button>
+<button id="elephant" onclick="animalClick('elephant')">🐘</button>
+<button id="giraffe" onclick="animalClick('giraffe')">🦒</button>
 
+<!-- UI -->
 <div class="center">
+
     <h1>💰 Shop Money: <span id="money">0</span></h1>
 
     <div class="money-controls">
         <button onclick="increase()" class="action">+</button>
         <button onclick="decrease()" class="action">-</button>
     </div>
+
 </div>
 
+<!-- hidden unlock -->
 <button id="unlockBtn" onclick="unlockClick()"></button>
 
 <script>
 let unlocked = false;
 let lockUntil = 0;
 
+/* correct order */
 const correctOrder = ["tiger", "elephant", "giraffe"];
 let playerOrder = [];
 
-/* RED SCREEN */
+/* ===== RED SCREEN ===== */
 function showRedScreen(msg) {
     document.body.innerHTML = `
         <div style="
@@ -112,14 +142,14 @@ function showRedScreen(msg) {
     `;
 }
 
-/* MONEY (simple local version so it ALWAYS works) */
+/* ===== MONEY ===== */
 let money = 0;
 
 function updateMoney() {
     document.getElementById("money").textContent = money;
 }
 
-/* + - */
+/* ===== + / - ===== */
 function increase() {
     if (!unlocked) return showRedScreen("Unlock first!");
     money++;
@@ -132,7 +162,7 @@ function decrease() {
     updateMoney();
 }
 
-/* ANIMALS */
+/* ===== ANIMALS ===== */
 function animalClick(animal) {
 
     if (animal === "monkey") {
@@ -162,7 +192,7 @@ function animalClick(animal) {
     }
 }
 
-/* UNLOCK */
+/* ===== UNLOCK ===== */
 function unlockClick() {
 
     if (Date.now() < lockUntil) {
