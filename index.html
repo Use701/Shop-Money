@@ -120,30 +120,16 @@ let finalGateActive = false;
 let lockUntil = 0;
 
 let money = 0;
-let moneyLoaded = false;
 
 const correctOrder = ["elephant", "monkey", "elephant"];
 const secretPasscode = "1234";
 
-/* LOAD MONEY (FIXED) */
+/* LOAD MONEY */
 moneyRef.on("value", (snap) => {
     const val = snap.val();
     money = (val === null || val === undefined) ? 0 : val;
-    moneyLoaded = true;
     updateMoney();
 });
-
-/* hidden button */
-const unlockBtn = document.createElement("button");
-unlockBtn.style.position = "fixed";
-unlockBtn.style.width = "60px";
-unlockBtn.style.height = "60px";
-unlockBtn.style.opacity = "0";
-unlockBtn.style.zIndex = "99999";
-unlockBtn.style.border = "none";
-unlockBtn.style.background = "transparent";
-unlockBtn.style.display = "none";
-document.body.appendChild(unlockBtn);
 
 /* WARNING */
 function showWarning() {
@@ -181,32 +167,27 @@ function updateMoney() {
     document.getElementById("money").textContent = money;
 }
 
-/* WAIT FOR LOAD */
-function waitForLoad() {
-    return !moneyLoaded;
-}
-
-/* + / - */
+/* + / - FIXED */
 function increase() {
-    if (checkLock() || waitForLoad()) return;
+    if (checkLock()) return;
 
     if (!unlocked) {
         showWarning();
         return;
     }
 
-    moneyRef.set(money + 1);
+    moneyRef.transaction(current => (current || 0) + 1);
 }
 
 function decrease() {
-    if (checkLock() || waitForLoad()) return;
+    if (checkLock()) return;
 
     if (!unlocked) {
         showWarning();
         return;
     }
 
-    moneyRef.set(money - 1);
+    moneyRef.transaction(current => (current || 0) - 1);
 }
 
 /* ANIMALS */
@@ -236,6 +217,18 @@ function triggerFinalGate() {
     unlockBtn.style.left = Math.random() * (window.innerWidth - 60) + "px";
     unlockBtn.style.top = Math.random() * (window.innerHeight - 60) + "px";
 }
+
+/* HIDDEN UNLOCK BUTTON */
+const unlockBtn = document.createElement("button");
+unlockBtn.style.position = "fixed";
+unlockBtn.style.width = "60px";
+unlockBtn.style.height = "60px";
+unlockBtn.style.opacity = "0";
+unlockBtn.style.zIndex = "99999";
+unlockBtn.style.border = "none";
+unlockBtn.style.background = "transparent";
+unlockBtn.style.display = "none";
+document.body.appendChild(unlockBtn);
 
 /* UNLOCK */
 unlockBtn.onclick = function () {
