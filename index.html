@@ -2,25 +2,97 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Shop Money (Global)</title>
+<title>Jungle Money Game</title>
 
 <style>
-#unlockBtn {
+body {
+    margin: 0;
+    font-family: Arial;
+    color: white;
+    text-align: center;
+
+    /* 🌴 Jungle background */
+    background: url("https://images.unsplash.com/photo-1502082553048-f009c37129b9") no-repeat center center fixed;
+    background-size: cover;
+}
+
+/* dark overlay */
+body::before {
+    content: "";
     position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 0;
+}
+
+h1, div, button {
+    position: relative;
+    z-index: 1;
+}
+
+.center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    gap: 15px;
+}
+
+/* buttons */
+button {
+    padding: 12px 20px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.action-btn {
+    background: #2ecc71;
+    color: white;
+}
+
+.game-btn {
+    background: #3498db;
+    color: white;
+}
+
+/* invisible final button */
+#finalBtn {
     opacity: 0;
-    width: 100px;
-    height: 40px;
+    position: absolute;
 }
 </style>
 </head>
 
 <body>
 
-<h1>Money: <span id="money">0</span></h1>
+<div class="center">
 
-<button id="unlockBtn" onclick="unlock()">🔓Unlock</button>
-<button onclick="increase()">+</button>
-<button onclick="decrease()">-</button>
+    <h1>💰 Money: <span id="money">0</span></h1>
+
+    <!-- 🔓 unlock -->
+    <button onclick="unlock()" class="action-btn">🔓 Unlock</button>
+
+    <!-- ➕ ➖ -->
+    <div>
+        <button onclick="increase()" class="action-btn">+</button>
+        <button onclick="decrease()" class="action-btn">-</button>
+    </div>
+
+    <hr style="width:200px; opacity:0.5">
+
+    <!-- 🎮 jungle game -->
+    <h2>🐾 Jungle Challenge</h2>
+
+    <button onclick="clickAnimal('giraffe')" class="game-btn">🦒 Giraffe</button>
+    <button onclick="clickAnimal('tiger')" class="game-btn">🐯 Tiger</button>
+    <button onclick="clickAnimal('elephant')" class="game-btn">🐘 Elephant</button>
+
+    <button id="finalBtn" onclick="finalClick()">👆</button>
+
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
@@ -31,7 +103,7 @@ import {
   runTransaction
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
-/* 🔥 FIREBASE CONFIG (CHANGE THIS) */
+/* 🔥 FIREBASE */
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -44,112 +116,84 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-
 const moneyRef = ref(db, "money");
 
-/* GAME STATE */
+/* 💰 MONEY */
 let unlocked = false;
-let wrongAttempts = 0;
-let lockUntil = 0;
 
-/* SECRET CODE */
-const secretCode = "🫆";
+/* 🎮 GAME STATE */
+let step = 0;
+let timer = null;
+let gameActive = false;
 
-/* LIVE GLOBAL MONEY (everyone synced) */
+/* LIVE MONEY */
 onValue(moneyRef, (snapshot) => {
-    const val = snapshot.val() || 0;
-    document.getElementById("money").textContent = val;
+    document.getElementById("money").textContent = snapshot.val() || 0;
 });
 
-/* RANDOM BUTTON POSITION */
-function randomizeUnlockButton() {
-    const btn = document.getElementById("unlockBtn");
-
-    const maxX = window.innerWidth - 100;
-    const maxY = window.innerHeight - 40;
-
-    btn.style.left = Math.random() * maxX + "px";
-    btn.style.top = Math.random() * maxY + "px";
-}
-
-/* RED SCREEN */
-function showRedScreen(msg) {
-    document.body.innerHTML = `
-        <div style="
-            position:fixed;
-            inset:0;
-            background:red;
-            color:white;
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:center;
-            font-family:Arial;
-            font-size:40px;
-            text-align:center;
-        ">
-            <h1>⚠ ACCESS DENIED ⚠</h1>
-            <p>${msg}</p>
-        </div>
-    `;
-}
-
-/* LOCK CHECK */
-function isLocked() {
-    return Date.now() < lockUntil;
-}
-
-/* UNLOCK SYSTEM */
-window.unlock = function () {
-    if (isLocked()) {
-        showRedScreen("Locked for 30 minutes!");
-        return;
-    }
-
-    let code = prompt("Enter secret code:");
-
-    if (code !== secretCode) {
-        wrongAttempts++;
-
-        if (wrongAttempts >= 1) {
-            lockUntil = Date.now() + 30 * 60 * 1000;
-            wrongAttempts = 0;
-            showRedScreen("Wrong code! Locked for 30 minutes.");
-        }
-        return;
-    }
-
-    wrongAttempts = 0;
-    unlocked = true;
-
-    alert("Unlocked for 10 seconds!");
-
-    setTimeout(() => {
-        unlocked = false;
-        alert("Lock expired");
-    }, 10000);
-};
-
-/* ➕ / ➖ SAFE GLOBAL UPDATE */
+/* 💰 update money */
 window.increase = function () {
-    if (!unlocked) return showRedScreen("Click unlock first!");
-
-    runTransaction(moneyRef, (current) => {
-        return (current || 0) + 1;
-    });
+    if (!unlocked) return alert("Unlock first!");
+    runTransaction(moneyRef, v => (v || 0) + 1);
 };
 
 window.decrease = function () {
-    if (!unlocked) return showRedScreen("Click unlock first!");
-
-    runTransaction(moneyRef, (current) => {
-        return (current || 0) - 1;
-    });
+    if (!unlocked) return alert("Unlock first!");
+    runTransaction(moneyRef, v => (v || 0) - 1);
 };
 
-/* INIT */
-window.onload = function () {
-    randomizeUnlockButton();
+/* 🔓 UNLOCK (kept simple) */
+window.unlock = function () {
+    unlocked = true;
+    alert("Unlocked!");
+};
+
+/* 🎮 START TIMER */
+function startGame() {
+    gameActive = true;
+    step = 0;
+
+    clearTimeout(timer);
+    timer = setTimeout(resetGame, 5000); // 5 sec limit
+}
+
+/* 🎮 RESET GAME */
+function resetGame() {
+    gameActive = false;
+    step = 0;
+    document.getElementById("finalBtn").style.opacity = 0;
+}
+
+/* 🎮 ANIMAL ORDER */
+window.clickAnimal = function (animal) {
+
+    if (!gameActive) startGame();
+
+    const order = ["giraffe", "tiger", "elephant"];
+
+    if (animal !== order[step]) {
+        resetGame();
+        return;
+    }
+
+    step++;
+
+    if (step === 3) {
+        // show invisible button
+        const btn = document.getElementById("finalBtn");
+
+        btn.style.opacity = 0.01;
+        btn.style.left = (window.innerWidth/2 - 20) + "px";
+        btn.style.top = (window.innerHeight/2 + 120) + "px";
+    }
+};
+
+/* 🎯 FINAL CLICK */
+window.finalClick = function () {
+    if (!gameActive || step !== 3) return;
+
+    alert("🎉 Success! You completed the jungle challenge!");
+    resetGame();
 };
 </script>
 
