@@ -5,7 +5,6 @@
 <title>Shop Money Jungle Game</title>
 
 <style>
-/* ===== BACKGROUND ===== */
 body {
     margin: 0;
     font-family: Arial;
@@ -14,72 +13,48 @@ body {
     background: linear-gradient(to bottom, #0b3d1e, #06240f);
 }
 
-/* jungle depth layers */
+/* jungle layers */
 .layer {
     position: fixed;
     inset: 0;
     pointer-events: none;
 }
 
-#layer1 {
-    background: url("https://i.imgur.com/7Y3bK7m.png") repeat-x bottom;
-    opacity: 0.25;
-    z-index: 0;
-}
+#layer1 { opacity: 0.25; z-index: 0; }
+#layer2 { opacity: 0.4; z-index: 1; }
+#layer3 { opacity: 0.6; z-index: 2; }
 
-#layer2 {
-    background: url("https://i.imgur.com/8QZ7xXh.png") repeat-x bottom;
-    opacity: 0.4;
-    z-index: 1;
-}
-
-#layer3 {
-    background: url("https://i.imgur.com/2Z8qz0L.png") repeat-x bottom;
-    opacity: 0.6;
-    z-index: 2;
-}
-
-/* ===== ANIMALS ===== */
-.animal {
+/* ===== ANIMAL BUTTONS ===== */
+.animal-btn {
     position: fixed;
-    z-index: 3;
-    pointer-events: none;
-}
-
-#giraffe {
-    font-size: 160px;
-    top: 10px;
-    right: 10px;
-}
-
-#monkey {
+    background: transparent;
+    border: none;
     font-size: 80px;
-    top: 60px;
-    left: 120px;
+    cursor: pointer;
+    z-index: 3;
+    transition: transform 0.1s;
 }
 
+.animal-btn:active {
+    transform: scale(0.9);
+}
+
+/* positions */
+#giraffe { top: 10px; right: 10px; font-size: 150px; }
+#monkey { top: 80px; left: 120px; font-size: 90px; }
+#elephant { bottom: 10px; left: 20px; font-size: 140px; }
+#tiger { bottom: 40px; right: 120px; font-size: 120px; }
+
+/* banana decoration */
 #banana {
     position: fixed;
-    top: 110px;
-    left: 160px;
+    top: 130px;
+    left: 170px;
     font-size: 35px;
     z-index: 3;
 }
 
-#elephant {
-    font-size: 140px;
-    bottom: 10px;
-    left: 20px;
-}
-
-#tiger {
-    font-size: 120px;
-    bottom: 40px;
-    right: 120px;
-    opacity: 0.9;
-}
-
-/* ===== UI ===== */
+/* UI */
 .center {
     position: relative;
     z-index: 5;
@@ -91,6 +66,11 @@ body {
     gap: 15px;
 }
 
+.money-controls {
+    display: flex;
+    gap: 10px;
+}
+
 button {
     padding: 12px 20px;
     font-size: 18px;
@@ -99,19 +79,16 @@ button {
     cursor: pointer;
 }
 
-.money-controls {
-    display: flex;
-    gap: 10px;
-}
-
 .action {
     background: #2ecc71;
     color: white;
 }
 
-/* invisible unlock button */
+/* hidden unlock */
 #unlockBtn {
     position: fixed;
+    bottom: 20px;
+    right: 20px;
     width: 80px;
     height: 40px;
     opacity: 0;
@@ -127,12 +104,13 @@ button {
 <div id="layer2" class="layer"></div>
 <div id="layer3" class="layer"></div>
 
-<!-- 🐾 animals -->
-<div id="giraffe" class="animal">🦒</div>
-<div id="monkey" class="animal">🐒</div>
-<div id="banana" class="animal">🍌</div>
-<div id="elephant" class="animal">🐘</div>
-<div id="tiger" class="animal">🐯</div>
+<!-- 🐾 ANIMAL BUTTONS -->
+<button id="giraffe" class="animal-btn" onclick="animalClick('giraffe')">🦒</button>
+<button id="monkey" class="animal-btn" onclick="animalClick('monkey')">🐒</button>
+<button id="elephant" class="animal-btn" onclick="animalClick('elephant')">🐘</button>
+<button id="tiger" class="animal-btn" onclick="animalClick('tiger')">🐯</button>
+
+<div id="banana">🍌</div>
 
 <!-- UI -->
 <div class="center">
@@ -146,7 +124,7 @@ button {
 
 </div>
 
-<!-- invisible unlock button -->
+<!-- hidden unlock -->
 <button id="unlockBtn" onclick="unlockClick()"></button>
 
 <script type="module">
@@ -158,7 +136,6 @@ import {
   runTransaction
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
-/* ===== FIREBASE (REPLACE THIS) ===== */
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -173,57 +150,65 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const moneyRef = ref(db, "money");
 
-/* ===== GAME STATE ===== */
+/* STATE */
 let unlocked = false;
 let lockUntil = 0;
 let wrongAttempts = 0;
 
-/* ===== LIVE MONEY ===== */
-onValue(moneyRef, (snapshot) => {
-    document.getElementById("money").textContent = snapshot.val() || 0;
+/* MONEY */
+onValue(moneyRef, (snap) => {
+    document.getElementById("money").textContent = snap.val() || 0;
 });
 
-/* ===== MONEY ACTIONS ===== */
+/* + - */
 window.increase = function () {
-    if (!unlocked) return alert("Unlock first!");
+    if (!unlocked) return showRedScreen("Unlock first!");
     runTransaction(moneyRef, v => (v || 0) + 1);
 };
 
 window.decrease = function () {
-    if (!unlocked) return alert("Unlock first!");
+    if (!unlocked) return showRedScreen("Unlock first!");
     runTransaction(moneyRef, v => (v || 0) - 1);
 };
 
-/* ===== MOVE HIDDEN BUTTON ===== */
-function moveButton() {
-    const btn = document.getElementById("unlockBtn");
+/* ANIMAL CLICK FUNCTION */
+window.animalClick = function (animal) {
+    console.log("Clicked:", animal);
+    alert("You clicked " + animal + " 🐾");
+};
 
-    const x = Math.random() * (window.innerWidth - 80);
-    const y = Math.random() * (window.innerHeight - 40);
-
-    btn.style.left = x + "px";
-    btn.style.top = y + "px";
+/* RED SCREEN */
+function showRedScreen(msg) {
+    document.body.innerHTML = `
+        <div style="
+            position:fixed;
+            inset:0;
+            background:red;
+            color:white;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            font-size:40px;
+            font-family:Arial;
+            text-align:center;
+        ">
+        <h1>⚠ ACCESS DENIED ⚠</h1>
+        <p>${msg}</p>
+        </div>
+    `;
 }
 
-/* ===== LOCK CHECK ===== */
+/* LOCK */
 function isLocked() {
     return Date.now() < lockUntil;
 }
 
-/* ===== INIT ===== */
-window.onload = function () {
-    moveButton();
-
-    setInterval(() => {
-        if (!unlocked) moveButton();
-    }, 1200);
-};
-
-/* ===== UNLOCK SYSTEM ===== */
+/* UNLOCK */
 window.unlockClick = function () {
 
     if (isLocked()) {
-        alert("⛔ Locked for 30 minutes!");
+        showRedScreen("Locked 30 minutes!");
         return;
     }
 
@@ -235,17 +220,15 @@ window.unlockClick = function () {
         if (wrongAttempts >= 1) {
             lockUntil = Date.now() + 30 * 60 * 1000;
             wrongAttempts = 0;
-            alert("⛔ Wrong password! Locked 30 minutes.");
+            showRedScreen("Wrong password! Locked 30 minutes.");
         }
         return;
     }
 
     unlocked = true;
-    alert("🔓 Unlocked for 10 seconds!");
+    alert("Unlocked for 10 seconds!");
 
-    setTimeout(() => {
-        unlocked = false;
-    }, 10000);
+    setTimeout(() => unlocked = false, 10000);
 };
 </script>
 
