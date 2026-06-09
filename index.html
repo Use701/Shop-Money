@@ -23,12 +23,12 @@ body {
     z-index: 2;
 }
 
-#giraffe { top: 20px; right: 20px; font-size: 150px; }
-#monkey { top: 80px; left: 80px; }
-#elephant { bottom: 20px; left: 20px; font-size: 130px; }
 #tiger { bottom: 50px; right: 120px; font-size: 110px; }
+#elephant { bottom: 20px; left: 20px; font-size: 130px; }
+#giraffe { top: 20px; right: 20px; font-size: 150px; }
+#monkey { top: 80px; left: 80px; font-size: 90px; }
 
-/* 🍌 */
+/* banana */
 #banana {
     position: fixed;
     top: 120px;
@@ -66,7 +66,7 @@ button {
     color: white;
 }
 
-/* ===== INVISIBLE UNLOCK BUTTON ===== */
+/* ===== UNLOCK BUTTON ===== */
 #unlockBtn {
     position: fixed;
     width: 80px;
@@ -82,6 +82,7 @@ button {
 
 <!-- 🐾 ANIMALS -->
 <button id="tiger" class="animal-btn" onclick="animalClick('tiger')">🐯</button>
+<button id="monkey" class="animal-btn" onclick="animalClick('monkey')">🐒</button>
 <button id="elephant" class="animal-btn" onclick="animalClick('elephant')">🐘</button>
 <button id="giraffe" class="animal-btn" onclick="animalClick('giraffe')">🦒</button>
 
@@ -99,7 +100,7 @@ button {
 
 </div>
 
-<!-- hidden unlock -->
+<!-- unlock -->
 <button id="unlockBtn" onclick="unlockClick()"></button>
 
 <script type="module">
@@ -170,31 +171,40 @@ window.decrease = function () {
     runTransaction(moneyRef, v => (v || 0) - 1);
 };
 
-/* ===== ANIMAL ORDER ===== */
+/* ===== ANIMALS ===== */
 window.animalClick = function (animal) {
+
+    // 🐒 monkey = distraction only
+    if (animal === "monkey") {
+        alert("🐒 distraction!");
+        return;
+    }
 
     playerOrder.push(animal);
 
     let i = playerOrder.length - 1;
 
+    // ❌ WRONG ORDER → 30 MIN LOCK
     if (playerOrder[i] !== correctOrder[i]) {
         playerOrder = [];
-        alert("❌ Wrong order! Restart!");
+        lockUntil = Date.now() + 30 * 60 * 1000;
+        wrongAttempts = 0;
+        showRedScreen("Wrong order! Locked 30 minutes.");
         return;
     }
 
+    // ✅ SUCCESS
     if (playerOrder.length === correctOrder.length) {
         const btn = document.getElementById("unlockBtn");
         btn.style.display = "block";
 
-        // ✅ RANDOM POSITION ONLY ONCE
         const x = Math.random() * (window.innerWidth - 80);
         const y = Math.random() * (window.innerHeight - 40);
 
         btn.style.left = x + "px";
         btn.style.top = y + "px";
 
-        alert("✅ Correct order! Unlock button appeared!");
+        alert("✅ Unlock button appeared!");
     }
 };
 
@@ -214,13 +224,8 @@ window.unlockClick = function () {
     let code = prompt("Enter password:");
 
     if (code !== "🫆") {
-        wrongAttempts++;
-
-        if (wrongAttempts >= 1) {
-            lockUntil = Date.now() + 30 * 60 * 1000;
-            wrongAttempts = 0;
-            showRedScreen("Wrong password! Locked 30 minutes.");
-        }
+        lockUntil = Date.now() + 30 * 60 * 1000;
+        showRedScreen("Wrong password! Locked 30 minutes.");
         return;
     }
 
