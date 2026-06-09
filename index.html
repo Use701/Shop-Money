@@ -57,10 +57,31 @@ button {
     background: #2ecc71;
     color: white;
 }
+
+/* ===== RED WARNING SCREEN ===== */
+#warningScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: red;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: bold;
+    z-index: 99999;
+    display: none;
+}
 </style>
 </head>
 
 <body>
+
+<!-- RED SCREEN -->
+<div id="warningScreen">⚠️  UNLOCK FIRST!  ⚠️</div>
 
 <!-- ANIMALS -->
 <button class="animal-btn tiger" onclick="animalClick('tiger')">🐯</button>
@@ -102,6 +123,16 @@ unlockBtn.style.background = "transparent";
 unlockBtn.style.display = "none";
 document.body.appendChild(unlockBtn);
 
+/* RED SCREEN FUNCTION */
+function showWarning() {
+    const screen = document.getElementById("warningScreen");
+    screen.style.display = "flex";
+
+    setTimeout(() => {
+        screen.style.display = "none";
+    }, 1200);
+}
+
 function isLocked() {
     return Date.now() < lockUntil;
 }
@@ -133,14 +164,24 @@ function checkLock() {
 /* + / - */
 function increase() {
     if (checkLock()) return;
-    if (!unlocked) return alert("Unlock first!");
+
+    if (!unlocked) {
+        showWarning();
+        return;
+    }
+
     money++;
     updateMoney();
 }
 
 function decrease() {
     if (checkLock()) return;
-    if (!unlocked) return alert("Unlock first!");
+
+    if (!unlocked) {
+        showWarning();
+        return;
+    }
+
     money--;
     updateMoney();
 }
@@ -160,11 +201,11 @@ function animalClick(animal) {
     playerOrder.push(animal);
 
     if (playerOrder.length === correctOrder.length) {
-        triggerFinalGate(); // silent unlock stage
+        triggerFinalGate();
     }
 }
 
-/* FINAL GATE (NO MESSAGE) */
+/* FINAL GATE */
 function triggerFinalGate() {
     finalGateActive = true;
 
