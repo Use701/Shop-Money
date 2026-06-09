@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Shop Money (Shared)</title>
+<title>Shop Money (Global)</title>
 
 <style>
 #unlockBtn {
@@ -28,10 +28,10 @@ import {
   getDatabase,
   ref,
   onValue,
-  set
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
-/* 🔥 FIREBASE CONFIG (REPLACE THIS) */
+/* 🔥 FIREBASE CONFIG (CHANGE THIS) */
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -44,27 +44,22 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
 const moneyRef = ref(db, "money");
 
-/* GLOBAL STATE */
-let money = 0;
+/* GAME STATE */
 let unlocked = false;
 let wrongAttempts = 0;
 let lockUntil = 0;
 
-/* EMOJIS (your original idea kept) */
-const secretCode = "🫆"; // R
+/* SECRET CODE */
+const secretCode = "🫆";
 
-/* LIVE SYNC (everyone sees same money) */
+/* LIVE GLOBAL MONEY (everyone synced) */
 onValue(moneyRef, (snapshot) => {
-    money = snapshot.val() || 0;
-    document.getElementById("money").textContent = money;
+    const val = snapshot.val() || 0;
+    document.getElementById("money").textContent = val;
 });
-
-/* SAVE TO FIREBASE */
-function saveMoney() {
-    set(moneyRef, money);
-}
 
 /* RANDOM BUTTON POSITION */
 function randomizeUnlockButton() {
@@ -75,11 +70,6 @@ function randomizeUnlockButton() {
 
     btn.style.left = Math.random() * maxX + "px";
     btn.style.top = Math.random() * maxY + "px";
-}
-
-/* LOCK CHECK */
-function isLocked() {
-    return Date.now() < lockUntil;
 }
 
 /* RED SCREEN */
@@ -102,6 +92,11 @@ function showRedScreen(msg) {
             <p>${msg}</p>
         </div>
     `;
+}
+
+/* LOCK CHECK */
+function isLocked() {
+    return Date.now() < lockUntil;
 }
 
 /* UNLOCK SYSTEM */
@@ -135,17 +130,21 @@ window.unlock = function () {
     }, 10000);
 };
 
-/* MONEY FUNCTIONS */
+/* ➕ / ➖ SAFE GLOBAL UPDATE */
 window.increase = function () {
     if (!unlocked) return showRedScreen("Click unlock first!");
-    money++;
-    saveMoney();
+
+    runTransaction(moneyRef, (current) => {
+        return (current || 0) + 1;
+    });
 };
 
 window.decrease = function () {
     if (!unlocked) return showRedScreen("Click unlock first!");
-    money--;
-    saveMoney();
+
+    runTransaction(moneyRef, (current) => {
+        return (current || 0) - 1;
+    });
 };
 
 /* INIT */
