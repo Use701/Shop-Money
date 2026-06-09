@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <title>Shop Money Game</title>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-database-compat.js"></script>
+
 <style>
 body {
     margin: 0;
@@ -13,7 +17,7 @@ body {
     background: linear-gradient(to bottom, #1db954, #0b6623);
 }
 
-/* ===== ANIMALS ===== */
+/* ANIMALS */
 .animal-btn {
     position: fixed;
     background: transparent;
@@ -29,7 +33,7 @@ body {
 .giraffe { top: 20px; right: 20px; font-size: 140px; }
 .tiger { bottom: 20px; right: 20px; }
 
-/* ===== UI ===== */
+/* UI */
 .center {
     position: relative;
     height: 100vh;
@@ -58,7 +62,7 @@ button {
     color: white;
 }
 
-/* ===== RED WARNING ===== */
+/* WARNING */
 #warningScreen {
     position: fixed;
     top: 0;
@@ -98,16 +102,34 @@ button {
 </div>
 
 <script>
+/* ================= FIREBASE ================= */
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const moneyRef = db.ref("shopMoney");
+
+/* ================= GAME STATE ================= */
 let unlocked = false;
 let failed = false;
 let playerOrder = [];
-let money = 0;
-
 let finalGateActive = false;
 let lockUntil = 0;
 
 const correctOrder = ["elephant", "monkey", "elephant"];
 const secretPasscode = "1234";
+
+/* real-time money */
+let money = 0;
+moneyRef.on("value", (snap) => {
+    money = snap.val() || 0;
+    updateMoney();
+});
 
 /* hidden button */
 const unlockBtn = document.createElement("button");
@@ -136,18 +158,13 @@ function isLocked() {
     return Date.now() < lockUntil;
 }
 
-/* UI */
-function updateMoney() {
-    document.getElementById("money").textContent = money;
-}
-
 function showLockScreen() {
     document.body.innerHTML = `
         <div style="
             position:fixed;top:0;left:0;width:100%;height:100%;
             background:black;color:red;
             display:flex;align-items:center;justify-content:center;
-            font-size:28px;text-align:center;">
+            font-size:28px;">
             🔒 LOCKED FOR 30 MINUTES 🔒
         </div>
     `;
@@ -161,6 +178,11 @@ function checkLock() {
     return false;
 }
 
+/* UI */
+function updateMoney() {
+    document.getElementById("money").textContent = money;
+}
+
 /* + / - */
 function increase() {
     if (checkLock()) return;
@@ -170,8 +192,7 @@ function increase() {
         return;
     }
 
-    money++;
-    updateMoney();
+    moneyRef.set(money + 1);
 }
 
 function decrease() {
@@ -182,11 +203,10 @@ function decrease() {
         return;
     }
 
-    money--;
-    updateMoney();
+    moneyRef.set(money - 1);
 }
 
-/* ANIMAL LOGIC */
+/* ANIMALS */
 function animalClick(animal) {
     if (checkLock()) return;
     if (failed || unlocked || finalGateActive) return;
@@ -214,7 +234,7 @@ function triggerFinalGate() {
     unlockBtn.style.top = Math.random() * (window.innerHeight - 60) + "px";
 }
 
-/* CLICK HIDDEN BUTTON */
+/* UNLOCK BUTTON */
 unlockBtn.onclick = function () {
     const input = prompt("Enter secret passcode:");
 
@@ -223,7 +243,7 @@ unlockBtn.onclick = function () {
         finalGateActive = false;
         unlockBtn.style.display = "none";
 
-        // ⏱ TEMP UNLOCK (10 seconds)
+        // ⏱ 10-second unlock
         setTimeout(() => {
             unlocked = false;
         }, 10000);
@@ -233,8 +253,6 @@ unlockBtn.onclick = function () {
         showLockScreen();
     }
 };
-
-updateMoney();
 </script>
 
 </body>
