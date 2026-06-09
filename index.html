@@ -99,40 +99,22 @@ button {
 
 <script>
 let unlocked = false;
+let failed = false;
+
 let playerOrder = [];
 let money = 0;
 
 /* SECRET CODE */
 const correctOrder = ["elephant", "monkey", "elephant"];
 
-/* UPDATE MONEY */
 function updateMoney() {
     document.getElementById("money").textContent = money;
-}
-
-/* RED SCREEN */
-function showRedScreen(msg) {
-    document.body.innerHTML = `
-        <div style="
-            position:fixed;
-            inset:0;
-            background:red;
-            color:white;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            font-size:50px;
-            font-weight:bold;
-        ">
-            ⚠️ ${msg} ⚠️
-        </div>
-    `;
 }
 
 /* + BUTTON */
 function increase() {
     if (!unlocked) {
-        showRedScreen("Unlock First");
+        alert("Unlock first!");
         return;
     }
 
@@ -143,7 +125,7 @@ function increase() {
 /* - BUTTON */
 function decrease() {
     if (!unlocked) {
-        showRedScreen("Unlock First");
+        alert("Unlock first!");
         return;
     }
 
@@ -151,13 +133,15 @@ function decrease() {
     updateMoney();
 }
 
-/* ANIMAL SEQUENCE */
+/* ANIMAL LOGIC */
 function animalClick(animal) {
+
+    if (failed || unlocked) return;
 
     const expected = correctOrder[playerOrder.length];
 
-    // Ignore wrong clicks (no reset, no penalty)
     if (animal !== expected) {
+        failed = true;   // ❌ PERMANENT FAIL
         return;
     }
 
