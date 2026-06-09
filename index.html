@@ -13,44 +13,44 @@ body {
     background: linear-gradient(to bottom, #1db954, #0b6623);
 }
 
-/* ===== ANIMALS IN CORNERS ===== */
+/* ===== ANIMALS = BUTTONS ===== */
 .animal-btn {
     position: fixed;
-    background: transparent;
+    background: none;
     border: none;
-    font-size: 90px;
     cursor: pointer;
+    font-size: 110px;
+    transition: transform 0.1s;
 }
 
-/* 🦒 top right */
+.animal-btn:active {
+    transform: scale(0.9);
+}
+
+/* corners */
+#tiger {
+    bottom: 20px;
+    right: 20px;
+}
+
+#elephant {
+    bottom: 20px;
+    left: 20px;
+}
+
 #giraffe {
     top: 20px;
     right: 20px;
-    font-size: 150px;
+    font-size: 140px;
 }
 
-/* 🐒 top left */
 #monkey {
     top: 20px;
     left: 20px;
     font-size: 90px;
 }
 
-/* 🐘 bottom left */
-#elephant {
-    bottom: 20px;
-    left: 20px;
-    font-size: 130px;
-}
-
-/* 🐯 bottom right */
-#tiger {
-    bottom: 20px;
-    right: 20px;
-    font-size: 110px;
-}
-
-/* ===== CENTER UI ===== */
+/* ===== UI ===== */
 .center {
     position: relative;
     height: 100vh;
@@ -79,51 +79,43 @@ button {
     background: #2ecc71;
     color: white;
 }
-
-/* ===== INVISIBLE BUTTON ===== */
-#unlockBtn {
-    position: fixed;
-    width: 80px;
-    height: 40px;
-    opacity: 0;
-    display: none;
-    z-index: 10;
-}
 </style>
 </head>
 
 <body>
 
-<!-- 🐾 ANIMALS -->
-<button id="tiger" onclick="animalClick('tiger')">🐯</button>
-<button id="monkey" onclick="animalClick('monkey')">🐒</button>
-<button id="elephant" onclick="animalClick('elephant')">🐘</button>
-<button id="giraffe" onclick="animalClick('giraffe')">🦒</button>
+<!-- 🐾 ANIMALS (now are the actual buttons) -->
+<button class="animal-btn" id="tiger" onclick="animalClick('tiger')">🐯</button>
+<button class="animal-btn" id="monkey" onclick="animalClick('monkey')">🐒</button>
+<button class="animal-btn" id="elephant" onclick="animalClick('elephant')">🐘</button>
+<button class="animal-btn" id="giraffe" onclick="animalClick('giraffe')">🦒</button>
 
 <!-- UI -->
 <div class="center">
-
     <h1>💰 Shop Money: <span id="money">0</span></h1>
 
     <div class="money-controls">
         <button onclick="increase()" class="action">+</button>
         <button onclick="decrease()" class="action">-</button>
     </div>
-
 </div>
-
-<!-- hidden unlock -->
-<button id="unlockBtn" onclick="unlockClick()"></button>
 
 <script>
 let unlocked = false;
 let lockUntil = 0;
 
-/* correct order */
+/* order */
 const correctOrder = ["tiger", "elephant", "giraffe"];
 let playerOrder = [];
 
-/* ===== RED SCREEN ===== */
+/* money */
+let money = 0;
+
+function updateMoney() {
+    document.getElementById("money").textContent = money;
+}
+
+/* red screen */
 function showRedScreen(msg) {
     document.body.innerHTML = `
         <div style="
@@ -142,14 +134,7 @@ function showRedScreen(msg) {
     `;
 }
 
-/* ===== MONEY ===== */
-let money = 0;
-
-function updateMoney() {
-    document.getElementById("money").textContent = money;
-}
-
-/* ===== + / - ===== */
+/* + - */
 function increase() {
     if (!unlocked) return showRedScreen("Unlock first!");
     money++;
@@ -162,7 +147,7 @@ function decrease() {
     updateMoney();
 }
 
-/* ===== ANIMALS ===== */
+/* ANIMALS */
 function animalClick(animal) {
 
     if (animal === "monkey") {
@@ -182,39 +167,15 @@ function animalClick(animal) {
     }
 
     if (playerOrder.length === correctOrder.length) {
-        const btn = document.getElementById("unlockBtn");
-        btn.style.display = "block";
+        unlocked = true;
+        alert("✅ Correct order! You are unlocked for 10 seconds.");
 
-        btn.style.left = Math.random() * (window.innerWidth - 80) + "px";
-        btn.style.top = Math.random() * (window.innerHeight - 40) + "px";
-
-        alert("✅ Unlock button appeared!");
+        setTimeout(() => {
+            unlocked = false;
+        }, 10000);
     }
 }
 
-/* ===== UNLOCK ===== */
-function unlockClick() {
-
-    if (Date.now() < lockUntil) {
-        showRedScreen("Locked for 30 minutes!");
-        return;
-    }
-
-    let code = prompt("Enter password:");
-
-    if (code !== "🫆") {
-        lockUntil = Date.now() + 30 * 60 * 1000;
-        showRedScreen("Wrong password! Locked 30 minutes.");
-        return;
-    }
-
-    unlocked = true;
-    alert("Unlocked for 10 seconds!");
-
-    setTimeout(() => unlocked = false, 10000);
-}
-
-/* init */
 updateMoney();
 </script>
 
