@@ -101,7 +101,6 @@ button {
 
 <script>
 let unlocked = false;
-let lockUntil = 0;
 
 /* SECRET ORDER */
 const correctOrder = ["elephant", "monkey", "elephant"];
@@ -114,34 +113,23 @@ function updateMoney() {
     document.getElementById("money").textContent = money;
 }
 
-/* RED SCREEN */
-function showRedScreen(msg) {
-    document.body.innerHTML = `
-        <div style="
-            position:fixed;
-            inset:0;
-            background:red;
-            color:white;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            font-size:40px;
-            text-align:center;
-        ">
-        ⚠ ${msg}
-        </div>
-    `;
-}
-
 /* + - */
 function increase() {
-    if (!unlocked) return showRedScreen("Unlock first!");
+    if (!unlocked) {
+        alert("Unlock first!");
+        return;
+    }
+
     money++;
     updateMoney();
 }
 
 function decrease() {
-    if (!unlocked) return showRedScreen("Unlock first!");
+    if (!unlocked) {
+        alert("Unlock first!");
+        return;
+    }
+
     money--;
     updateMoney();
 }
@@ -153,9 +141,7 @@ function animalClick(animal) {
 
     for (let i = 0; i < playerOrder.length; i++) {
         if (playerOrder[i] !== correctOrder[i]) {
-            playerOrder = [];
-            lockUntil = Date.now() + 30 * 60 * 1000;
-            showRedScreen("Wrong order! Locked 30 minutes.");
+            playerOrder = []; // reset if wrong
             return;
         }
     }
