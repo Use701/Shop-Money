@@ -97,23 +97,31 @@ button {
 (() => {
 
 /* =========================
-   WAIT FOR FIREBASE SAFELY
+   WAIT FOR FIREBASE (FIXED)
 ========================= */
-function waitForFirebase(callback){
-    let tries = 0;
+function waitForFirebaseReady(){
+    return new Promise((resolve, reject) => {
 
-    const check = setInterval(() => {
-        if (typeof firebase !== "undefined") {
-            clearInterval(check);
-            callback();
-        }
+        let tries = 0;
 
-        tries++;
-        if (tries > 30) {
-            clearInterval(check);
-            alert("Firebase failed to load. Check GitHub Pages or internet.");
-        }
-    }, 200);
+        const check = setInterval(() => {
+
+            if (window.firebase &&
+                firebase.auth &&
+                firebase.database) {
+                clearInterval(check);
+                resolve();
+            }
+
+            tries++;
+            if (tries > 40) {
+                clearInterval(check);
+                reject("Firebase failed to load");
+            }
+
+        }, 150);
+
+    });
 }
 
 /* =========================
@@ -140,7 +148,7 @@ let seq = [];
 let gate = false;
 let lockUntil = 0;
 
-/* SIMPLE TEST ORDER (fixes your issue) */
+/* SIMPLE BUT WORKING ORDER */
 const order = ["tiger","tiger","elephant"];
 const map = {tiger:"t",monkey:"m",elephant:"e",giraffe:"g"};
 
@@ -248,12 +256,17 @@ lockScreen();
 };
 
 });
+
 }
 
 /* =========================
-   START SAFELY (FIX)
+   SAFE START (IMPORTANT FIX)
 ========================= */
-waitForFirebase(startGame);
+waitForFirebaseReady()
+.then(startGame)
+.catch(err => {
+alert("ERROR: " + err);
+});
 
 })();
 </script>
