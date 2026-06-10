@@ -96,12 +96,30 @@ button {
 <script>
 (() => {
 
-function startGame() {
+/* =========================
+   WAIT FOR FIREBASE SAFELY
+========================= */
+function waitForFirebase(callback){
+    let tries = 0;
 
-if (typeof firebase === "undefined") {
-alert("Firebase failed to load");
-return;
+    const check = setInterval(() => {
+        if (typeof firebase !== "undefined") {
+            clearInterval(check);
+            callback();
+        }
+
+        tries++;
+        if (tries > 30) {
+            clearInterval(check);
+            alert("Firebase failed to load. Check GitHub Pages or internet.");
+        }
+    }, 200);
 }
+
+/* =========================
+        MAIN GAME
+========================= */
+function startGame(){
 
 firebase.initializeApp({
 apiKey:"YOUR_API_KEY",
@@ -122,7 +140,8 @@ let seq = [];
 let gate = false;
 let lockUntil = 0;
 
-const order = ["tiger","tiger","tiger","elephant"];
+/* SIMPLE TEST ORDER (fixes your issue) */
+const order = ["tiger","tiger","elephant"];
 const map = {tiger:"t",monkey:"m",elephant:"e",giraffe:"g"};
 
 moneyEl.textContent = "0";
@@ -189,8 +208,11 @@ if (seq.length === order.length) {
 gate = true;
 
 const btn = document.createElement("button");
-btn.style.cssText =
-"position:fixed;width:60px;height:60px;opacity:0;z-index:99999";
+btn.style.position = "fixed";
+btn.style.width = "60px";
+btn.style.height = "60px";
+btn.style.opacity = "0";
+btn.style.zIndex = "99999";
 
 btn.style.left = Math.random() * (innerWidth - 60) + "px";
 btn.style.top = Math.random() * (innerHeight - 60) + "px";
@@ -228,7 +250,10 @@ lockScreen();
 });
 }
 
-document.addEventListener("DOMContentLoaded", startGame);
+/* =========================
+   START SAFELY (FIX)
+========================= */
+waitForFirebase(startGame);
 
 })();
 </script>
