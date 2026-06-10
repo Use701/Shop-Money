@@ -101,11 +101,6 @@ button {
 
 function startGame(){
 
-if (!window.firebase) {
-console.error("Firebase not loaded");
-return;
-}
-
 firebase.initializeApp({
 apiKey:"YOUR_API_KEY",
 authDomain:"YOUR_PROJECT.firebaseapp.com",
@@ -119,17 +114,17 @@ const db = firebase.database();
 const moneyEl = document.getElementById("money");
 const warnEl = document.getElementById("warningScreen");
 
-if (!moneyEl || !warnEl) return;
-
-let unlocked = 0;
-let failed = 0;
+let unlocked = false;
+let failed = false;
 let seq = [];
-let gate = 0;
+let gate = false;
 let lockUntil = 0;
 
 const order = [
-"tiger","tiger","tiger","tiger","tiger","tiger","tiger","tiger","tiger","tiger",
-"tiger","tiger","tiger","tiger","tiger","tiger","tiger","tiger","tiger","tiger",
+"tiger","tiger","tiger","tiger","tiger",
+"tiger","tiger","tiger","tiger","tiger",
+"tiger","tiger","tiger","tiger","tiger",
+"tiger","tiger","tiger","tiger","tiger",
 "elephant"
 ];
 
@@ -163,18 +158,6 @@ LOCKED FOR 30 MINUTES
 </div>`;
 };
 
-/* 🔐 REAL SERVER CHECK (NO PASSWORD IN CODE) */
-async function checkPassword(input){
-    const res = await fetch("https://YOUR-WORKER-URL.workers.dev/verify", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ password: input })
-    });
-
-    const data = await res.json();
-    return data.ok;
-}
-
 window.increase = () => {
 if (locked()) return lockScreen();
 if (!unlocked) return warn();
@@ -188,37 +171,50 @@ ref.transaction(v => (v || 0) - 1);
 };
 
 window.animalClick = (a) => {
-if (locked()) return lockScreen();
-if (failed || unlocked || gate) return;
 
-if (map[a] !== order[seq.length]) return failed = 1;
+if (locked()) return lockScreen();
+if (failed) return warn();
+if (gate || unlocked) return;
+
+if (map[a] !== order[seq.length]) {
+failed = true;
+warn();
+return;
+}
 
 seq.push(map[a]);
 
 if (seq.length === order.length) {
-gate = 1;
+gate = true;
 
 const btn = document.createElement("button");
-btn.style.cssText =
-"position:fixed;width:60px;height:60px;opacity:0;display:none;z-index:99999";
+btn.style.position = "fixed";
+btn.style.width = "60px";
+btn.style.height = "60px";
+btn.style.opacity = "0";
+btn.style.zIndex = "99999";
 
-document.body.appendChild(btn);
-
-btn.style.display = "block";
 btn.style.left = Math.random() * (innerWidth - 60) + "px";
 btn.style.top = Math.random() * (innerHeight - 60) + "px";
+
+document.body.appendChild(btn);
 
 btn.onclick = async () => {
 const input = prompt("Enter code:");
 
-const ok = await checkPassword(input || "");
+const res = await fetch("https://YOUR-WORKER-URL.workers.dev/verify", {
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body: JSON.stringify({ password: input })
+});
 
-if (ok) {
-unlocked = 1;
-gate = 0;
-btn.style.display = "none";
+const data = await res.json();
 
-setTimeout(() => unlocked = 0, 10000);
+if (data.ok) {
+unlocked = true;
+gate = false;
+btn.remove();
+setTimeout(() => unlocked = false, 10000);
 alert("Unlocked!");
 } else {
 lockUntil = Date.now() + 1800000;
@@ -227,6 +223,8 @@ lockScreen();
 };
 
 }
+
+};
 
 });
 
