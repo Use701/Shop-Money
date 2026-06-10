@@ -5,7 +5,6 @@
 <title>Shop Money Game</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-database-compat.js"></script>
 
 <style>
@@ -17,6 +16,7 @@ body {
     background: linear-gradient(to bottom, #1db954, #0b6623);
 }
 
+/* ANIMALS */
 .animal-btn {
     position: fixed;
     background: transparent;
@@ -32,6 +32,7 @@ body {
 .giraffe { top: 20px; right: 20px; font-size: 140px; }
 .tiger { bottom: 20px; right: 20px; }
 
+/* UI */
 .center {
     position: relative;
     height: 100vh;
@@ -60,9 +61,13 @@ button {
     color: white;
 }
 
+/* WARNING */
 #warningScreen {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: red;
     color: white;
     display: none;
@@ -79,6 +84,7 @@ button {
 
 <div id="warningScreen">⚠️ UNLOCK FIRST! ⚠️</div>
 
+<!-- ANIMALS -->
 <button class="animal-btn tiger" onclick="animalClick('tiger')">🐯</button>
 <button class="animal-btn monkey" onclick="animalClick('monkey')">🐒</button>
 <button class="animal-btn elephant" onclick="animalClick('elephant')">🐘</button>
@@ -94,181 +100,181 @@ button {
 </div>
 
 <script>
-(() => {
+/* ================= FIREBASE ================= */
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT",
+};
 
-/* =========================
-   WAIT FOR FIREBASE (FIXED)
-========================= */
-function waitForFirebaseReady(){
-    return new Promise((resolve, reject) => {
-
-        let tries = 0;
-
-        const check = setInterval(() => {
-
-            if (window.firebase &&
-                firebase.auth &&
-                firebase.database) {
-                clearInterval(check);
-                resolve();
-            }
-
-            tries++;
-            if (tries > 40) {
-                clearInterval(check);
-                reject("Firebase failed to load");
-            }
-
-        }, 150);
-
-    });
-}
-
-/* =========================
-        MAIN GAME
-========================= */
-function startGame(){
-
-firebase.initializeApp({
-apiKey:"YOUR_API_KEY",
-authDomain:"YOUR_PROJECT.firebaseapp.com",
-databaseURL:"https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-projectId:"YOUR_PROJECT"
-});
-
-const auth = firebase.auth();
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const moneyRef = db.ref("shopMoney");
 
-const moneyEl = document.getElementById("money");
-const warnEl = document.getElementById("warningScreen");
-
+/* ================= STATE ================= */
 let unlocked = false;
 let failed = false;
-let seq = [];
-let gate = false;
+let playerOrder = [];
+let finalGateActive = false;
 let lockUntil = 0;
 
-/* SIMPLE BUT WORKING ORDER */
-const order = ["tiger","tiger","elephant"];
-const map = {tiger:"t",monkey:"m",elephant:"e",giraffe:"g"};
+let money = 0;
+let A = "👾 Alien"
+let B = "🍌 Banana chaos"
+let C = "🐱 Cat energy"
+let D = "💎 Diamond vibes"
+let E = "⚡ Electric spark"
+let F = "🔥 Fire mode"
+let G = "🪙 Gold coin"
+let H = "🏠 Home base"
+let I = "🧊 Ice cold"
+let J = "🃏 Joker trick"
+let K = "🔑 Secret key"
+let L = "🦁 Lion roar"
+let M = "🌙 Moonlight"
+let N = "🧠 Brain blast"
+let O = "👁️ Eye see you"
+let P = "🍕 Pizza time"
+let Q = "❓ Mystery question"
+let R = "🤖 Robot mode"
+let S = "⭐ Star power"
+let T = "⏰ Time warp"
+let U = "☂️ Umbrella shield"
+let V = "🎮 Game controller"
+let W = "🌊 Wave rider"
+let X = "❌ X factor"
+let Y = "🟡 Yellow flash"
+let Z = "⚡ Zero gravity zone"
+const correctOrder = ["elephant", "monkey", "elephant"];
+const Secretpasscode = "L";
+const secretPasscode = "G";
+const SecretPasscode = "D";
 
-moneyEl.textContent = "0";
-
-auth.signInAnonymously().then(user => {
-
-const ref = db.ref("shopMoney/" + user.user.uid);
-
-ref.once("value", snap => {
-if (snap.val() === null) ref.set(0);
+/* LOAD MONEY */
+moneyRef.on("value", (snap) => {
+    const val = snap.val();
+    money = (val === null || val === undefined) ? 0 : val;
+    updateMoney();
 });
 
-ref.on("value", snap => {
-moneyEl.textContent = snap.val() || 0;
-});
+/* WARNING */
+function showWarning() {
+    const screen = document.getElementById("warningScreen");
+    screen.style.display = "flex";
 
-const warn = () => {
-warnEl.style.display = "flex";
-setTimeout(() => warnEl.style.display = "none", 1200);
-};
-
-const locked = () => Date.now() < lockUntil;
-
-const lockScreen = () => {
-document.body.innerHTML =
-`<div style="position:fixed;inset:0;background:black;color:red;display:flex;align-items:center;justify-content:center;font-size:28px">
-LOCKED FOR 30 MINUTES
-</div>`;
-};
-
-window.increase = () => {
-if (locked()) return lockScreen();
-if (!unlocked) return warn();
-ref.transaction(v => (v || 0) + 1);
-};
-
-window.decrease = () => {
-if (locked()) return lockScreen();
-if (!unlocked) return warn();
-ref.transaction(v => (v || 0) - 1);
-};
-
-window.animalClick = (a) => {
-
-if (locked()) return lockScreen();
-if (failed) return warn();
-if (gate || unlocked) return;
-
-if (map[a] !== order[seq.length]) {
-failed = true;
-warn();
-
-setTimeout(() => {
-failed = false;
-seq = [];
-}, 1200);
-
-return;
+    setTimeout(() => {
+        screen.style.display = "none";
+    }, 1200);
 }
 
-seq.push(map[a]);
-
-if (seq.length === order.length) {
-gate = true;
-
-const btn = document.createElement("button");
-btn.style.position = "fixed";
-btn.style.width = "60px";
-btn.style.height = "60px";
-btn.style.opacity = "0";
-btn.style.zIndex = "99999";
-
-btn.style.left = Math.random() * (innerWidth - 60) + "px";
-btn.style.top = Math.random() * (innerHeight - 60) + "px";
-
-document.body.appendChild(btn);
-
-btn.onclick = async () => {
-const input = prompt("Enter code:");
-
-const res = await fetch("https://YOUR-WORKER-URL.workers.dev/verify", {
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body: JSON.stringify({ password: input })
-});
-
-const data = await res.json();
-
-if (data.ok) {
-unlocked = true;
-gate = false;
-btn.remove();
-
-setTimeout(() => unlocked = false, 10000);
-alert("Unlocked!");
-} else {
-lockUntil = Date.now() + 1800000;
-lockScreen();
+/* LOCK */
+function isLocked() {
+    return Date.now() < lockUntil;
 }
+
+function checkLock() {
+    if (isLocked()) {
+        document.body.innerHTML = `
+            <div style="
+                position:fixed;top:0;left:0;width:100%;height:100%;
+                background:black;color:red;
+                display:flex;align-items:center;justify-content:center;
+                font-size:28px;">
+                🔒 LOCKED FOR 30 MINUTES 🔒
+            </div>
+        `;
+        return true;
+    }
+    return false;
+}
+
+/* UI */
+function updateMoney() {
+    document.getElementById("money").textContent = money;
+}
+
+/* + / - FIXED */
+function increase() {
+    if (checkLock()) return;
+
+    if (!unlocked) {
+        showWarning();
+        return;
+    }
+
+    moneyRef.transaction(current => (current || 0) + 1);
+}
+
+function decrease() {
+    if (checkLock()) return;
+
+    if (!unlocked) {
+        showWarning();
+        return;
+    }
+
+    moneyRef.transaction(current => (current || 0) - 1);
+}
+
+/* ANIMALS */
+function animalClick(animal) {
+    if (checkLock()) return;
+    if (failed || unlocked || finalGateActive) return;
+
+    const expected = correctOrder[playerOrder.length];
+
+    if (animal !== expected) {
+        failed = true;
+        return;
+    }
+
+    playerOrder.push(animal);
+
+    if (playerOrder.length === correctOrder.length) {
+        triggerFinalGate();
+    }
+}
+
+/* FINAL GATE */
+function triggerFinalGate() {
+    finalGateActive = true;
+
+    unlockBtn.style.display = "block";
+    unlockBtn.style.left = Math.random() * (window.innerWidth - 60) + "px";
+    unlockBtn.style.top = Math.random() * (window.innerHeight - 60) + "px";
+}
+
+/* HIDDEN UNLOCK BUTTON */
+const unlockBtn = document.createElement("button");
+unlockBtn.style.position = "fixed";
+unlockBtn.style.width = "60px";
+unlockBtn.style.height = "60px";
+unlockBtn.style.opacity = "0";
+unlockBtn.style.zIndex = "99999";
+unlockBtn.style.border = "none";
+unlockBtn.style.background = "transparent";
+unlockBtn.style.display = "none";
+document.body.appendChild(unlockBtn);
+
+/* UNLOCK */
+unlockBtn.onclick = function () {
+    const input = prompt("Enter secret passcode:");
+
+    if (input === secretPasscode) {
+        unlocked = true;
+        finalGateActive = false;
+        unlockBtn.style.display = "none";
+
+        setTimeout(() => {
+            unlocked = false;
+        }, 10000);
+
+    } else {
+        lockUntil = Date.now() + 30 * 60 * 1000;
+        checkLock();
+    }
 };
-
-}
-
-};
-
-});
-
-}
-
-/* =========================
-   SAFE START (IMPORTANT FIX)
-========================= */
-waitForFirebaseReady()
-.then(startGame)
-.catch(err => {
-alert("ERROR: " + err);
-});
-
-})();
 </script>
 
 </body>
