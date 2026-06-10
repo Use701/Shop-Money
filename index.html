@@ -1,7 +1,12 @@
 <script>
 (() => {
 
-const startGame = () => {
+function start(){
+
+if (!window.firebase) {
+console.error("Firebase missing");
+return;
+}
 
 firebase.initializeApp({
 apiKey:"YOUR_API_KEY",
@@ -13,6 +18,14 @@ projectId:"YOUR_PROJECT"
 const auth = firebase.auth();
 const db = firebase.database();
 
+const moneyEl = document.getElementById("money");
+const warnEl = document.getElementById("warningScreen");
+
+if (!moneyEl || !warnEl) {
+console.error("Missing HTML elements");
+return;
+}
+
 let unlocked = 0;
 let failed = 0;
 let seq = [];
@@ -23,37 +36,29 @@ const order = ["tiger","tiger","elephant"];
 const map = {tiger:"t",monkey:"m",elephant:"e",giraffe:"g"};
 const PASS = "MONKEY";
 
-const moneyEl = document.getElementById("money");
-const warningEl = document.getElementById("warningScreen");
-
-if (!moneyEl || !warningEl) {
-console.error("Missing HTML elements");
-return;
-}
+/* NEVER blank screen */
+moneyEl.textContent = "0";
 
 auth.signInAnonymously().then(user => {
 
-const uid = user.user.uid;
-const ref = db.ref("shopMoney/" + uid);
+const ref = db.ref("shopMoney/" + user.user.uid);
 
-/* init account */
-ref.once("value", snap => {
-if (snap.val() === null) ref.set(0);
+/* init */
+ref.once("value", s => {
+if (s.val() === null) ref.set(0);
 });
 
-/* live money */
-ref.on("value", snap => {
-moneyEl.textContent = snap.val() || 0;
+/* live update */
+ref.on("value", s => {
+moneyEl.textContent = s.val() || 0;
 });
 
-/* warning */
 const warn = () => {
-warningEl.style.display = "flex";
-setTimeout(() => warningEl.style.display = "none", 1200);
+warnEl.style.display = "flex";
+setTimeout(() => warnEl.style.display = "none", 1200);
 };
 
-/* lock system */
-const isLocked = () => Date.now() < lockUntil;
+const locked = () => Date.now() < lockUntil;
 
 const lockScreen = () => {
 document.body.innerHTML =
@@ -62,22 +67,20 @@ LOCKED FOR 30 MINUTES
 </div>`;
 };
 
-/* money functions */
 window.increase = () => {
-if (isLocked()) return lockScreen();
+if (locked()) return lockScreen();
 if (!unlocked) return warn();
 ref.transaction(v => (v || 0) + 1);
 };
 
 window.decrease = () => {
-if (isLocked()) return lockScreen();
+if (locked()) return lockScreen();
 if (!unlocked) return warn();
 ref.transaction(v => (v || 0) - 1);
 };
 
-/* animal puzzle */
 window.animalClick = (a) => {
-if (isLocked()) return lockScreen();
+if (locked()) return lockScreen();
 if (failed || unlocked || gate) return;
 
 if (map[a] !== order[seq.length]) return failed = 1;
@@ -85,25 +88,19 @@ if (map[a] !== order[seq.length]) return failed = 1;
 seq.push(map[a]);
 
 if (seq.length === order.length) {
-showUnlockButton();
-}
-};
 
-/* invisible button */
+gate = 1;
+
 const btn = document.createElement("button");
 btn.style.cssText =
-"position:fixed;width:60px;height:60px;opacity:0;display:none;z-index:99999";
-document.body.appendChild(btn);
+"position:fixed;width:60px;height:60px;opacity:0;z-index:99999";
 
-function showUnlockButton() {
-gate = 1;
+document.body.appendChild(btn);
 
 btn.style.display = "block";
 btn.style.left = Math.random() * (innerWidth - 60) + "px";
 btn.style.top = Math.random() * (innerHeight - 60) + "px";
-}
 
-/* unlock logic */
 btn.onclick = () => {
 const input = prompt("Enter code:");
 
@@ -115,20 +112,22 @@ btn.style.display = "none";
 setTimeout(() => unlocked = 0, 10000);
 
 } else {
-lockUntil = Date.now() + 30 * 60 * 1000;
+lockUntil = Date.now() + 1800000;
 lockScreen();
 }
 };
 
+}
+
 });
 
-};
+}
 
-/* FIX: wait for HTML to load (prevents blank screen) */
+/* wait for page */
 if (document.readyState === "loading") {
-document.addEventListener("DOMContentLoaded", startGame);
+document.addEventListener("DOMContentLoaded", start);
 } else {
-startGame();
+start();
 }
 
 })();
