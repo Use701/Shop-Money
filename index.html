@@ -62,10 +62,7 @@ button {
 
 #warningScreen {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: red;
     color: white;
     display: none;
@@ -99,7 +96,12 @@ button {
 <script>
 (() => {
 
-function startGame(){
+function startGame() {
+
+if (typeof firebase === "undefined") {
+alert("Firebase failed to load");
+return;
+}
 
 firebase.initializeApp({
 apiKey:"YOUR_API_KEY",
@@ -120,14 +122,7 @@ let seq = [];
 let gate = false;
 let lockUntil = 0;
 
-const order = [
-"tiger","tiger","tiger","tiger","tiger",
-"tiger","tiger","tiger","tiger","tiger",
-"tiger","tiger","tiger","tiger","tiger",
-"tiger","tiger","tiger","tiger","tiger",
-"elephant"
-];
-
+const order = ["tiger","tiger","tiger","elephant"];
 const map = {tiger:"t",monkey:"m",elephant:"e",giraffe:"g"};
 
 moneyEl.textContent = "0";
@@ -179,6 +174,12 @@ if (gate || unlocked) return;
 if (map[a] !== order[seq.length]) {
 failed = true;
 warn();
+
+setTimeout(() => {
+failed = false;
+seq = [];
+}, 1200);
+
 return;
 }
 
@@ -188,11 +189,8 @@ if (seq.length === order.length) {
 gate = true;
 
 const btn = document.createElement("button");
-btn.style.position = "fixed";
-btn.style.width = "60px";
-btn.style.height = "60px";
-btn.style.opacity = "0";
-btn.style.zIndex = "99999";
+btn.style.cssText =
+"position:fixed;width:60px;height:60px;opacity:0;z-index:99999";
 
 btn.style.left = Math.random() * (innerWidth - 60) + "px";
 btn.style.top = Math.random() * (innerHeight - 60) + "px";
@@ -214,6 +212,7 @@ if (data.ok) {
 unlocked = true;
 gate = false;
 btn.remove();
+
 setTimeout(() => unlocked = false, 10000);
 alert("Unlocked!");
 } else {
@@ -227,14 +226,9 @@ lockScreen();
 };
 
 });
-
 }
 
-if (document.readyState === "loading") {
 document.addEventListener("DOMContentLoaded", startGame);
-} else {
-startGame();
-}
 
 })();
 </script>
