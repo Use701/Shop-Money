@@ -81,7 +81,6 @@ button {
 
 <div id="warningScreen">⚠️ UNLOCK FIRST! ⚠️</div>
 
-<!-- ANIMALS -->
 <button class="animal-btn tiger" onclick="animalClick('tiger')">🐯</button>
 <button class="animal-btn monkey" onclick="animalClick('monkey')">🐒</button>
 <button class="animal-btn elephant" onclick="animalClick('elephant')">🐘</button>
@@ -99,153 +98,109 @@ button {
 <script>
 (() => {
 
-/* ================= FIREBASE ================= */
-const firebaseConfig = {
+firebase.initializeApp({
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT.firebaseapp.com",
     databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
     projectId: "YOUR_PROJECT",
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const moneyRef = db.ref("shopMoney");
-
-/* ================= STATE ================= */
-let unlocked = false;
-let failed = false;
-let playerOrder = [];
-let finalGateActive = false;
-let lockUntil = 0;
-
-let money = 0;
-
-/* UPDATED ORDER */
-const correctOrder = ["tiger", "tiger", "elephant"];
-
-/* ================= LOAD MONEY ================= */
-moneyRef.on("value", (snap) => {
-    money = snap.val() || 0;
-    document.getElementById("money").textContent = money;
 });
 
-/* ================= WARNING ================= */
-function showWarning() {
-    const screen = document.getElementById("warningScreen");
-    screen.style.display = "flex";
+const r = firebase.database().ref("shopMoney");
+const m = document.getElementById("money");
+const w = document.getElementById("warningScreen");
 
-    setTimeout(() => {
-        screen.style.display = "none";
-    }, 1200);
-}
+let u = false,
+    f = false,
+    p = [],
+    g = false,
+    l = 0;
 
-/* ================= LOCK SYSTEM ================= */
-function isLocked() {
-    return Date.now() < lockUntil;
-}
+const o = ["t","t","e"];
+const key = "G";
 
-function checkLock() {
-    if (isLocked()) {
-        document.body.innerHTML = `
-            <div style="
-                position:fixed;top:0;left:0;width:100%;height:100%;
-                background:black;color:red;
-                display:flex;align-items:center;justify-content:center;
-                font-size:28px;">
-                🔒 LOCKED FOR 30 MINUTES 🔒
-            </div>
-        `;
-        return true;
-    }
-    return false;
-}
+r.on("value", s => {
+    m.textContent = s.val() || 0;
+});
 
-/* ================= MONEY UI ================= */
-function updateMoney() {
-    document.getElementById("money").textContent = money;
-}
+const warn = () => {
+    w.style.display = "flex";
+    setTimeout(() => w.style.display = "none", 1200);
+};
 
-/* ================= SAFE FIREBASE UPDATE ================= */
-function increase() {
-    if (checkLock()) return;
+const locked = () => Date.now() < l;
 
-    if (!unlocked) {
-        showWarning();
+const block = () => {
+    document.body.innerHTML =
+    `<div style="
+        position:fixed;
+        inset:0;
+        background:black;
+        color:red;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:28px;">
+        🔒 LOCKED FOR 30 MINUTES 🔒
+    </div>`;
+};
+
+window.increase = () => {
+    if (locked()) return block();
+    if (!u) return warn();
+    r.transaction(v => (v || 0) + 1);
+};
+
+window.decrease = () => {
+    if (locked()) return block();
+    if (!u) return warn();
+    r.transaction(v => (v || 0) - 1);
+};
+
+const map = {
+    tiger:"t",
+    monkey:"m",
+    elephant:"e",
+    giraffe:"g"
+};
+
+window.animalClick = a => {
+    if (locked()) return block();
+    if (f || u || g) return;
+
+    if (map[a] !== o[p.length]) {
+        f = true;
         return;
     }
 
-    moneyRef.transaction(current => (current || 0) + 1);
+    p.push(map[a]);
+
+    if (p.length === o.length) showBtn();
+};
+
+const b = document.createElement("button");
+b.style.cssText =
+"position:fixed;width:60px;height:60px;opacity:0;display:none;z-index:99999";
+document.body.appendChild(b);
+
+function showBtn() {
+    g = true;
+    b.style.display = "block";
+    b.style.left = Math.random() * (innerWidth - 60) + "px";
+    b.style.top = Math.random() * (innerHeight - 60) + "px";
 }
 
-function decrease() {
-    if (checkLock()) return;
+b.onclick = () => {
+    const x = prompt("Enter secret passcode:");
 
-    if (!unlocked) {
-        showWarning();
-        return;
-    }
+    if (x === key) {
+        u = true;
+        g = false;
+        b.style.display = "none";
 
-    moneyRef.transaction(current => (current || 0) - 1);
-}
-
-/* ================= ANIMAL PUZZLE ================= */
-function animalClick(animal) {
-    if (checkLock()) return;
-    if (failed || unlocked || finalGateActive) return;
-
-    const expected = correctOrder[playerOrder.length];
-
-    if (animal !== expected) {
-        failed = true;
-        return;
-    }
-
-    playerOrder.push(animal);
-
-    if (playerOrder.length === correctOrder.length) {
-        triggerFinalGate();
-    }
-}
-
-/* ================= FINAL GATE ================= */
-function triggerFinalGate() {
-    finalGateActive = true;
-
-    unlockBtn.style.display = "block";
-    unlockBtn.style.left = Math.random() * (window.innerWidth - 60) + "px";
-    unlockBtn.style.top = Math.random() * (window.innerHeight - 60) + "px";
-}
-
-/* ================= HIDDEN UNLOCK BUTTON ================= */
-const unlockBtn = document.createElement("button");
-unlockBtn.style.position = "fixed";
-unlockBtn.style.width = "60px";
-unlockBtn.style.height = "60px";
-unlockBtn.style.opacity = "0";
-unlockBtn.style.zIndex = "99999";
-unlockBtn.style.border = "none";
-unlockBtn.style.background = "transparent";
-unlockBtn.style.display = "none";
-document.body.appendChild(unlockBtn);
-
-/* ================= UNLOCK LOGIC ================= */
-const secretPasscode = "G";
-
-unlockBtn.onclick = function () {
-    const input = prompt("Enter secret passcode:");
-
-    if (input === secretPasscode) {
-        unlocked = true;
-        finalGateActive = false;
-        unlockBtn.style.display = "none";
-
-        setTimeout(() => {
-            unlocked = false;
-        }, 10000);
-
+        setTimeout(() => u = false, 10000);
     } else {
-        lockUntil = Date.now() + 30 * 60 * 1000;
-        checkLock();
+        l = Date.now() + 30 * 60 * 1000;
+        block();
     }
 };
 
