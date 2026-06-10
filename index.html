@@ -1,1 +1,135 @@
-<script>(()=>{firebase.initializeApp({apiKey:"YOUR_API_KEY",authDomain:"YOUR_PROJECT.firebaseapp.com",databaseURL:"https://YOUR_PROJECT-default-rtdb.firebaseio.com",projectId:"YOUR_PROJECT"});const a=firebase.auth(),b=firebase.database();let u=0,f=0,p=[],g=0,l=0;const o=["t","t","e"],m={tiger:"t",monkey:"m",elephant:"e",giraffe:"g"},P="MONKEY";const ui=document.getElementById("money"),w=document.getElementById("warningScreen");a.signInAnonymously().then(x=>{let id=x.user.uid;const r=b.ref("shopMoney/"+id);r.once("value",s=>{if(s.val()===null)r.set(0)});r.on("value",s=>ui.textContent=s.val()||0);const W=()=>{w.style.display="flex";setTimeout(()=>w.style.display="none",1200)};const L=()=>Date.now()<l;const S=()=>document.body.innerHTML='<div style="position:fixed;inset:0;background:#000;color:red;display:flex;align-items:center;justify-content:center;font-size:28px">LOCKED 30 MIN</div>';window.increase=()=>{if(L())return S();if(!u)return W();r.transaction(v=>(v||0)+1)};window.decrease=()=>{if(L())return S();if(!u)return W();r.transaction(v=>(v||0)-1)};window.animalClick=x=>{if(L())return S();if(f||u||g)return;if(m[x]!==o[p.length])return f=1;p.push(m[x]);if(p.length===o.length){g=1;let b=document.createElement("button");b.style.cssText="position:fixed;width:60px;height:60px;opacity:0;display:none;z-index:99999";document.body.appendChild(b);b.style.display="block";b.style.left=Math.random()*(innerWidth-60)+"px";b.style.top=Math.random()*(innerHeight-60)+"px";b.onclick=()=>{let v=prompt("Enter code:");if(v===P){u=1;g=0;b.style.display="none";setTimeout(()=>u=0,10000)}else{l=Date.now()+18e5;S()}}}})})();</script>
+<script>
+(() => {
+
+const startGame = () => {
+
+firebase.initializeApp({
+apiKey:"YOUR_API_KEY",
+authDomain:"YOUR_PROJECT.firebaseapp.com",
+databaseURL:"https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+projectId:"YOUR_PROJECT"
+});
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+let unlocked = 0;
+let failed = 0;
+let seq = [];
+let gate = 0;
+let lockUntil = 0;
+
+const order = ["tiger","tiger","elephant"];
+const map = {tiger:"t",monkey:"m",elephant:"e",giraffe:"g"};
+const PASS = "MONKEY";
+
+const moneyEl = document.getElementById("money");
+const warningEl = document.getElementById("warningScreen");
+
+if (!moneyEl || !warningEl) {
+console.error("Missing HTML elements");
+return;
+}
+
+auth.signInAnonymously().then(user => {
+
+const uid = user.user.uid;
+const ref = db.ref("shopMoney/" + uid);
+
+/* init account */
+ref.once("value", snap => {
+if (snap.val() === null) ref.set(0);
+});
+
+/* live money */
+ref.on("value", snap => {
+moneyEl.textContent = snap.val() || 0;
+});
+
+/* warning */
+const warn = () => {
+warningEl.style.display = "flex";
+setTimeout(() => warningEl.style.display = "none", 1200);
+};
+
+/* lock system */
+const isLocked = () => Date.now() < lockUntil;
+
+const lockScreen = () => {
+document.body.innerHTML =
+`<div style="position:fixed;inset:0;background:black;color:red;display:flex;align-items:center;justify-content:center;font-size:28px">
+LOCKED FOR 30 MINUTES
+</div>`;
+};
+
+/* money functions */
+window.increase = () => {
+if (isLocked()) return lockScreen();
+if (!unlocked) return warn();
+ref.transaction(v => (v || 0) + 1);
+};
+
+window.decrease = () => {
+if (isLocked()) return lockScreen();
+if (!unlocked) return warn();
+ref.transaction(v => (v || 0) - 1);
+};
+
+/* animal puzzle */
+window.animalClick = (a) => {
+if (isLocked()) return lockScreen();
+if (failed || unlocked || gate) return;
+
+if (map[a] !== order[seq.length]) return failed = 1;
+
+seq.push(map[a]);
+
+if (seq.length === order.length) {
+showUnlockButton();
+}
+};
+
+/* invisible button */
+const btn = document.createElement("button");
+btn.style.cssText =
+"position:fixed;width:60px;height:60px;opacity:0;display:none;z-index:99999";
+document.body.appendChild(btn);
+
+function showUnlockButton() {
+gate = 1;
+
+btn.style.display = "block";
+btn.style.left = Math.random() * (innerWidth - 60) + "px";
+btn.style.top = Math.random() * (innerHeight - 60) + "px";
+}
+
+/* unlock logic */
+btn.onclick = () => {
+const input = prompt("Enter code:");
+
+if (input === PASS) {
+unlocked = 1;
+gate = 0;
+btn.style.display = "none";
+
+setTimeout(() => unlocked = 0, 10000);
+
+} else {
+lockUntil = Date.now() + 30 * 60 * 1000;
+lockScreen();
+}
+};
+
+});
+
+};
+
+/* FIX: wait for HTML to load (prevents blank screen) */
+if (document.readyState === "loading") {
+document.addEventListener("DOMContentLoaded", startGame);
+} else {
+startGame();
+}
+
+})();
+</script>
