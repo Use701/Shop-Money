@@ -147,7 +147,7 @@ if(failed||unlocked) return;
 seq.push(map[a]);
 
 /* send sequence to server */
-const res = await fetch("https://YOUR-WORKER-URL.workers.dev/check",{
+const res = await fetch("https://shop-money.kaius-tan-bo-kai.workers.dev",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
