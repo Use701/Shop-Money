@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Shop Money Game</title>
+<title>Shop Money Game - Secure</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-database-compat.js"></script>
 
 <style>
@@ -96,142 +97,120 @@ button {
 </div>
 
 <script>
-(() => {
+(()=>{
 
 /* ================= FIREBASE ================= */
 firebase.initializeApp({
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT"
+apiKey:"YOUR_API_KEY",
+authDomain:"YOUR_PROJECT.firebaseapp.com",
+databaseURL:"https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+projectId:"YOUR_PROJECT"
 });
 
-const r = firebase.database().ref("shopMoney");
-const m = document.getElementById("money");
-const w = document.getElementById("warningScreen");
+const auth=firebase.auth();
+const db=firebase.database();
 
-/* ================= FIX: ENSURE DATA EXISTS ================= */
-r.on("value", snap => {
-    let v = snap.val();
+let uid=null;
+let unlocked=0,failed=0,seq=[],gate=0,lock=0;
 
-    if (v === null || v === undefined) {
-        r.set(0);
-        v = 0;
-    }
+const order=["tiger","tiger","elephant"];
+const map={tiger:"t",monkey:"m",elephant:"e",giraffe:"g"};
 
-    m.textContent = v;
+/* ================= UI ================= */
+const m=document.getElementById("money");
+const w=document.getElementById("warningScreen");
+
+/* ================= AUTH ================= */
+auth.signInAnonymously().then(u=>{
+uid=u.user.uid;
+init();
 });
 
-/* ================= STATE ================= */
-let unlocked = false;
-let failed = false;
-let playerOrder = [];
-let finalGateActive = false;
-let lockUntil = 0;
+/* ================= CORE ================= */
+function init(){
 
-/* ================= PUZZLE ================= */
-const correctOrder = ["tiger", "tiger", "elephant"];
-const secretPasscode = "G";
+const ref=db.ref("shopMoney/"+uid);
 
-const map = {
-    tiger: "t",
-    monkey: "m",
-    elephant: "e",
-    giraffe: "g"
+/* create account if missing */
+ref.once("value",s=>{
+if(s.val()===null) ref.set(0);
+});
+
+/* live money sync */
+ref.on("value",s=>{
+m.textContent=s.val()||0;
+});
+
+/* warning */
+const warn=()=>{
+w.style.display="flex";
+setTimeout(()=>w.style.display="none",1200);
 };
 
-/* ================= WARNING ================= */
-function showWarning() {
-    w.style.display = "flex";
-    setTimeout(() => {
-        w.style.display = "none";
-    }, 1200);
-}
+/* lock screen */
+const locked=()=>Date.now()<lock;
 
-/* ================= LOCK ================= */
-function isLocked() {
-    return Date.now() < lockUntil;
-}
-
-function lockScreen() {
-    document.body.innerHTML =
-    `<div style="
-        position:fixed;
-        inset:0;
-        background:black;
-        color:red;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:28px;">
-        🔒 LOCKED FOR 30 MINUTES 🔒
-    </div>`;
-}
-
-/* ================= MONEY ================= */
-window.increase = function () {
-    if (isLocked()) return lockScreen();
-    if (!unlocked) return showWarning();
-    r.transaction(v => (v || 0) + 1);
+const lockScreen=()=>{
+document.body.innerHTML=
+`<div style="position:fixed;inset:0;background:#000;color:red;display:flex;align-items:center;justify-content:center;font-size:28px">
+LOCKED FOR 30 MINUTES</div>`;
 };
 
-window.decrease = function () {
-    if (isLocked()) return lockScreen();
-    if (!unlocked) return showWarning();
-    r.transaction(v => (v || 0) - 1);
+/* ================= SAFE MONEY ================= */
+window.increase=()=>{
+if(locked())return lockScreen();
+if(!unlocked)return warn();
+
+ref.transaction(v=>(v||0)+1);
 };
 
-/* ================= ANIMAL CLICK ================= */
-window.animalClick = function (animal) {
-    if (isLocked()) return lockScreen();
-    if (failed || unlocked || finalGateActive) return;
+window.decrease=()=>{
+if(locked())return lockScreen();
+if(!unlocked)return warn();
 
-    const expected = correctOrder[playerOrder.length];
-
-    if (animal !== expected) {
-        failed = true;
-        return;
-    }
-
-    playerOrder.push(animal);
-
-    if (playerOrder.length === correctOrder.length) {
-        showUnlockButton();
-    }
+ref.transaction(v=>(v||0)-1);
 };
 
-/* ================= HIDDEN BUTTON ================= */
-const btn = document.createElement("button");
-btn.style.cssText =
-"position:fixed;width:60px;height:60px;opacity:0;display:none;z-index:99999";
+/* ================= ANIMAL GAME ================= */
+window.animalClick=a=>{
+if(locked())return lockScreen();
+if(failed||unlocked||gate)return;
+
+if(map[a]!==order[seq.length]) return failed=1;
+
+seq.push(map[a]);
+if(seq.length===order.length) spawn();
+};
+
+/* ================= INVISIBLE UNLOCK ================= */
+const btn=document.createElement("button");
+btn.style.cssText="position:fixed;width:60px;height:60px;opacity:0;display:none;z-index:99999";
 document.body.appendChild(btn);
 
-function showUnlockButton() {
-    finalGateActive = true;
-
-    btn.style.display = "block";
-    btn.style.left = Math.random() * (innerWidth - 60) + "px";
-    btn.style.top = Math.random() * (innerHeight - 60) + "px";
+function spawn(){
+gate=1;
+btn.style.display="block";
+btn.style.left=Math.random()*(innerWidth-60)+"px";
+btn.style.top=Math.random()*(innerHeight-60)+"px";
 }
 
-/* ================= UNLOCK ================= */
-btn.onclick = function () {
-    const input = prompt("Enter secret passcode:");
+btn.onclick=()=>{
+let p=prompt("Enter code:");
 
-    if (input === secretPasscode) {
-        unlocked = true;
-        finalGateActive = false;
-        btn.style.display = "none";
+if(p==="G"){
+unlocked=1;
+gate=0;
+btn.style.display="none";
 
-        setTimeout(() => {
-            unlocked = false;
-        }, 10000);
+setTimeout(()=>unlocked=0,10000);
 
-    } else {
-        lockUntil = Date.now() + 30 * 60 * 1000;
-        lockScreen();
-    }
+}else{
+lock=Date.now()+1800000;
+lockScreen();
+}
 };
+
+}
 
 })();
 </script>
